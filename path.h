@@ -40,13 +40,24 @@ public:
 class Node
 {
 private:
-	std::string m_Name;
-	float m_Energy;
-	std::vector< std::vector< float > > m_Pos;
-	std::vector< Edge> m_Parents;
+  std::string m_Name;
+  float m_Energy;
+  std::vector< std::vector< float > > m_Pos; // list of atom positions
+  // list of atoms containing a list of x,y,z coordinates
+  /* python 
+  m_Pos = []
+  with open( filename) as r:
+     for l in r:
+         if "ATOM" = l[:4]:
+	     x = float( l[46:54]
+	     y = ...
+	     z = ....
+	     m_Pos.append( [x,y,z] )
+  */  
+  std::vector< Edge> m_Parents;
 
 public:
-
+  // constructor
 	Node( const std::string &NAME, const std::string &ENERGY_IDENTIFIER, const std::vector< std::string> &ATOM_TYPES, const std::vector<char> &CHAINS,  const std::map<char,std::string> &ALIGNMENT)
     : m_Name( NAME), m_Energy(), m_Parents()
 	{
@@ -128,6 +139,8 @@ bool Iterate
     int i = 0, j = 0;
     // find remaining that are connected to latest
     for( std::vector< std::shared_ptr< Node > >::const_iterator rtr = REMAINING.begin(); rtr != REMAINING.end(); ++rtr, ++i)
+      {
+	j = 0;
     	for( std::vector< std::shared_ptr< Node > >::iterator ltr = LATEST.begin(); ltr != LATEST.end(); ++ltr, ++j)
         {
     		if( *rtr == *ltr)
@@ -138,7 +151,7 @@ bool Iterate
 
     		distance = RMSD( (*rtr)->GetPos(), (*ltr)->GetPos() );
 
-    		out << i << "\t" << j << "\t" << distance << std::endl;
+    		out << i << "\t" << j << "\t" << distance << "\t" << (*ltr)->GetName() << "\t" << (*rtr)->GetName() << std::endl;
 
     		if( distance < MAX_DIST)
     		{
@@ -147,6 +160,7 @@ bool Iterate
     		}
     		//if( distance < 100 ){ std::cout << "d: " << distance << std::endl;}
         }
+      }
     out.clear(); out.close();
 
     std::cout << "nr connected " << connected.size() << std::endl;
@@ -157,7 +171,10 @@ bool Iterate
 
     // stop if no new connections found
     if( connected.size() == 0 )
-    { return false;}
+    {
+    	std::cout << "nothing was found to be within RMSD cutoff, terminate" << std::endl;
+    	return false;
+    }
 
     // remove connected from remaining
     for( std::vector< std::shared_ptr< Node > >::iterator itr = REMAINING.begin(); itr != REMAINING.end(); ++itr)
@@ -171,7 +188,11 @@ bool Iterate
 
     // stop if no nodes are in REMAINING
     if( REMAINING.size() == 0 )
-    { return false;}
+    {
+    	std::cout << "no remaining nodes, iteration is terminated" << std::endl;
+    	return false;
+    }
+
 
     // pass newly connected to latest for next iteration
     //std::cout << "node destructors:" << std::endl;
@@ -184,6 +205,7 @@ bool Iterate
     {
     	std::cout << __FUNCTION__ <<" connected to last node in iteration: " << count << std::endl;
         std::cout << "final (first node) has " << LAST->GetParentEdges().size() << " parent edges" << std::endl;
+        std::cout << REMAINING.size() << " remaining nodes (these nodes are not linked to graph)." << std::endl;
         return false;
     }
 
@@ -198,6 +220,7 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
     std::cout << __FUNCTION__ << " " << POOL.size() << " " << PATH.size() << " " << MAX_ENERGY << " " << NODE->GetEnergy() << std::endl;
     MAX_ENERGY = std::max( MAX_ENERGY, NODE->GetEnergy());
 
+    // EITHER YOU HAVE A COMPLETE PATH
     if( *NODE == *FIRST_NODE){      // ptr vs obj
         std::cout << __FUNCTION__ << " connected to first node: " << std::endl;
         std::cout << NODE->GetName() << " ";
@@ -205,11 +228,13 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
         std::copy( PATH.begin(), PATH.end(), std::ostream_iterator<int>( std::cout , " ") );
         std::cout << std::endl;
         POOL.insert( std::make_pair( MAX_ENERGY , PATH));
-        return;
+        return; // ENDS FUNCTION
     }
 
+    // OR YOU STILL ARE ON THE WAY TO THE FIRST NODE
+
     auto edges = NODE->GetParentEdges();
-    std::cout << edges.size() << std::endl;
+    std::cout << edges.size() << " edges" << std::endl;
     if( edges.size() == 0)
     {
         std::cout <<  "WARNING: node has no parents!!" << std::endl;
@@ -218,8 +243,8 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
     for( unsigned int i = 0; i < edges.size(); ++i)
     {
         auto path = PATH;
-        path.push_back( i );
-        Backtrace( POOL, path, MAX_ENERGY, edges[i].GetNode(), FIRST_NODE);
+        path.push_back( i );  // extending the path with current edge ID
+        Backtrace( POOL, path, MAX_ENERGY, edges[i].GetNode(), FIRST_NODE);  // recursive call of itself
     }
 }
 

@@ -249,27 +249,30 @@ int main(  int ARGC, char ** ARGV)
 	in.close();
 	in.clear();
 
+	std::cout << all.size() + 1 << " nodes read" << std::endl;
+
 	std::vector< std::shared_ptr< Node> >
 		current;
 	current.push_back( first_node);
 
-	// network building loop
+	// network/graph building loop
 	while( Iterate( current, all, max_dist, last_node) ){}
 
 	// score sorted paths
 	std::multimap< float, std::vector<int> >
-		pool;
+		score_sorted_paths;
 	std::vector<int>
 		path;
 	node = last_node;
 
-	Backtrace( pool, path, -1e10, node, first_node);
+	// go through all possible pathways through the graph, search best solution
+	Backtrace( score_sorted_paths, path, -1e10, node, first_node);
 
-	std::cout << pool.size() << " complete paths" << std::endl;
-	std::cout << "minimum energy path: " << pool.begin()->first << std::endl;
+	std::cout << score_sorted_paths.size() << " complete paths" << std::endl;
+	std::cout << "minimum energy path: " << score_sorted_paths.begin()->first << std::endl;
 
 	std::cout << "all paths, sorted by energy threshold: " << std::endl;
-	for( std::multimap< float, std::vector<int> >::const_iterator itr = pool.begin(); itr != pool.end(); ++itr)
+	for( std::multimap< float, std::vector<int> >::const_iterator itr = score_sorted_paths.begin(); itr != score_sorted_paths.end(); ++itr)
 	{
 		std::cout << itr->first << ": ";
 		for( int i : itr->second)
@@ -293,19 +296,21 @@ int main(  int ARGC, char ** ARGV)
 		names;
 	float
 		//integral,
-		previous = pool.begin()->first;
+		previous = score_sorted_paths.begin()->first;
 	int
 		count = 0,
 		cc = 1,
 		i1 = 0;
 	std::cout << "print only first " << nr_output << std::endl;
-	for( std::multimap< float, std::vector<int> >::const_iterator itr = pool.begin(); itr != pool.end() && count < nr_output; ++itr, ++cc)
+	for( std::multimap< float, std::vector<int> >::const_iterator itr = score_sorted_paths.begin(); itr != score_sorted_paths.end() && count < nr_output; ++itr, ++cc)
 	{
 
-		if( itr->first != previous || cc == (signed) pool.size() )
+		if( itr->first != previous || cc == (signed) score_sorted_paths.size() )
 		{
 			previous = itr->first;
 			int i2 = 0;
+
+			// for plotting energy profiles along pathways with gnuplot
 			std::ofstream
 				gnu( outdir + "/gnu_" + std::to_string( i1) + ".txt");
 			gnu << "plot ";
@@ -318,7 +323,7 @@ int main(  int ARGC, char ** ARGV)
 					energy_file = "energy" + tail,
 					transition_file = "transition" + tail,
 					path_file = "path" + tail;
-				gnu << "\"" + energy_file + "\" us 3:4 w l ti \"\"";
+				gnu << "\"" + energy_file + "\" us 3:4 w l ti \"\"";   //  for plotting of profiles
 //				gnu << "\"" + energy_file + "\" us 3:4 w l ti \"" + std::to_string( i2) + "\"";
 				if( count + 1 < nr_output && i2 + 1 < (signed) sub_sorted.size())
 				{ gnu << ", ";}
@@ -386,6 +391,8 @@ int main(  int ARGC, char ** ARGV)
 //						out.close(); out.clear();
 //					}
 
+
+				// collect PDBs for creating nice movie
 				out.open( ( outdir + "/path_" + std::to_string( i1) + "_" + std::to_string( i2) + ".pdb").c_str() );
 				if(!out){ std::cerr << "ERROR: not opened pdb output file: " << std::endl; }
 
@@ -425,6 +432,6 @@ int main(  int ARGC, char ** ARGV)
 		{ score += e;}
 
 		sub_sorted.insert( std::make_pair( score, itr->second) );
-	}  // iterating pool
+	}  // iterating score_sorted_paths
 
 };
