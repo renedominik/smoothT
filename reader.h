@@ -115,7 +115,7 @@ bool CheckPDBLine( const std::string &LINE, const std::vector< std::string> &ATO
   static int prev_resid = -1000;
   static char prev_chain = ' ';
 
-  if( LINE.size() < 5 || LINE.substr(0,4) != "ATOM")
+  if( LINE.size() < 5 || ( LINE.substr(0,4) != "ATOM" && LINE.substr(0,6) != "HETATM"))
     { return false;}
 
   //  std::cout << __FUNCTION__ << std::endl;
@@ -244,7 +244,7 @@ void WritePDB( std::ofstream &OUT, const std::string &NAME, const float &MIN, co
 
     while( std::getline(in, line ) ){
     	if( line.size() < 3){ continue;}
-    	else if( line.substr(0,4) == "ATOM" )
+    	else if( line.substr(0,4) == "ATOM" || line.substr(0,6) == "HETATM")
     	{
     		//	WritePos( line, POS[count] );
     		if( loc == 0){WriteBFactor( line, MIN);}
