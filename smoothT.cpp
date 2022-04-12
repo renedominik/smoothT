@@ -255,6 +255,15 @@ int main(  int ARGC, char ** ARGV)
 		current;
 	current.push_back( first_node);
 
+
+	//////  switch first node 'off'  /////////////////////////////
+	float
+		initial_first_energy = first_node->GetEnergy();
+	current[0]->SetEnergy( 0.0);
+	std::cout << "check: " << first_node->GetEnergy() << " " << current[0]->GetEnergy() << " (ideally not the same)" << std::endl;
+	//////////////////////////////////////////////////////////////
+
+
 	// network/graph building loop
 	while( Iterate( current, all, max_dist, last_node) ){}
 
@@ -266,7 +275,12 @@ int main(  int ARGC, char ** ARGV)
 	node = last_node;
 
 	// go through all possible pathways through the graph, search best solution
-	Backtrace( score_sorted_paths, path, -1e10, node, first_node);
+	std::pair< float, float>
+		min_max = std::make_pair( 1e10, -1e10);
+	Backtrace( score_sorted_paths, path, min_max, node, first_node);
+	min_max.first = std::min( min_max.first, initial_first_energy);
+	min_max.second = std::max( min_max.second, initial_first_energy);
+	std::cout << "energy min: " << min_max.first << " max: " << min_max.second << std::endl;
 
 	std::cout << score_sorted_paths.size() << " complete paths" << std::endl;
 	std::cout << "minimum energy path: " << score_sorted_paths.begin()->first << std::endl;
@@ -274,13 +288,19 @@ int main(  int ARGC, char ** ARGV)
 	std::cout << "all paths, sorted by energy threshold: " << std::endl;
 	for( std::multimap< float, std::vector<int> >::const_iterator itr = score_sorted_paths.begin(); itr != score_sorted_paths.end(); ++itr)
 	{
-		std::cout << itr->first << ": ";
+		std::cout << itr->first + initial_first_energy << ": ";
 		for( int i : itr->second)
 		{ std::cout << i << " ";}
 		std::cout << std::endl;
     }
 
 	std::cout << "nr parents of first node (should be 0): " << first_node->GetParentEdges().size() << std::endl;
+
+
+	//////  switch first node back 'on'  /////////////////////////////
+	first_node->SetEnergy( initial_first_energy);
+	std::cout << "reset first node: " << first_node->GetEnergy() << std::endl;
+	//////////////////////////////////////////////////////////////
 
 
 	//////////////////////////////
@@ -305,7 +325,7 @@ int main(  int ARGC, char ** ARGV)
 	for( std::multimap< float, std::vector<int> >::const_iterator itr = score_sorted_paths.begin(); itr != score_sorted_paths.end() && count < nr_output; ++itr, ++cc)
 	{
 
-		if( itr->first != previous || cc == (signed) score_sorted_paths.size() )
+		if( itr->first != previous || cc == (signed) score_sorted_paths.size() || count == nr_output - 1)
 		{
 			previous = itr->first;
 			int i2 = 0;
@@ -353,7 +373,7 @@ int main(  int ARGC, char ** ARGV)
 					min_energy = *std::min_element( energies.begin(), energies.end() ),
 					max_energy = *std::max_element( energies.begin(), energies.end() );
 
-				std::cout << "energy range: " << min_energy << " " << max_energy << std::endl;
+				std::cout << "sum: " << jtr->first << " barrier: " << itr->first << " energy range: " << min_energy << " " << max_energy << std::endl;
 
 				std::ofstream
 					out( outdir + "/" + energy_file),
@@ -375,7 +395,7 @@ int main(  int ARGC, char ** ARGV)
 					if( i < energies.size())
 					{ EnergyTransition( trance , rmsd , sum , offset , energies[energies.size()-i] , energies[energies.size()-i-1] , 20 , count, 0.2 , width );}
 				}
-				out << "# check: " << rmsd << std::endl;
+				out << "# rmsd: " << rmsd << " barrier: " << itr->first << " sum: " << jtr->first << std::endl;
 				out.close(); out.clear();
 				trance.close(); trance.clear();
 
@@ -427,9 +447,14 @@ int main(  int ARGC, char ** ARGV)
 		energies.push_back( node->GetEnergy() );
 
 		// secondary score calculated here:
-		float score = 0.0;
+//		float score = 0.0;
+//		for( auto& e : energies)
+//		{ score += e;}
+		//
+		float score = energies.size() * min_max.first;
 		for( auto& e : energies)
 		{ score += e;}
+
 
 		sub_sorted.insert( std::make_pair( score, itr->second) );
 	}  // iterating score_sorted_paths
