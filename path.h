@@ -220,11 +220,12 @@ bool Iterate
 
 
 // PATH here is more a navigation instruction, which edge to follow in a specific node
-void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<int> PATH, std::pair<float,float> & MIN_MAX_ENERGY, const std::shared_ptr< Node> & NODE, std::shared_ptr< Node> &FIRST_NODE)
+void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<int> PATH, std::pair<float,float> & MIN_MAX_ENERGY, float PATH_MAX , const std::shared_ptr< Node> & NODE, std::shared_ptr< Node> &FIRST_NODE)
 {
 //    std::cout << __FUNCTION__ << " " << POOL.size() << " " << PATH.size() << " " << MIN_MAX_ENERGY.first << " " << MIN_MAX_ENERGY.second << " " << NODE->GetEnergy() << std::endl;
-    MIN_MAX_ENERGY.first  = std::max( MIN_MAX_ENERGY.first , NODE->GetEnergy());
+    MIN_MAX_ENERGY.first  = std::min( MIN_MAX_ENERGY.first , NODE->GetEnergy());
     MIN_MAX_ENERGY.second = std::max( MIN_MAX_ENERGY.second, NODE->GetEnergy());
+    PATH_MAX = std::max( PATH_MAX, NODE->GetEnergy());
     // EITHER YOU HAVE A COMPLETE PATH
     if( *NODE == *FIRST_NODE){      // ptr vs obj
 //        std::cout << __FUNCTION__ << " connected to first node: " << std::endl;
@@ -232,7 +233,7 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
 //        std::cout << FIRST_NODE->GetName() << std::endl;
 //        std::copy( PATH.begin(), PATH.end(), std::ostream_iterator<int>( std::cout , " ") );
 //        std::cout << std::endl;
-        POOL.insert( std::make_pair( MIN_MAX_ENERGY.second , PATH));
+        POOL.insert( std::make_pair( PATH_MAX , PATH));
         return; // ENDS FUNCTION
     }
 
@@ -249,7 +250,7 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
     {
         auto path = PATH;
         path.push_back( i );  // extending the path with current edge ID
-        Backtrace( POOL, path, MIN_MAX_ENERGY, edges[i].GetNode(), FIRST_NODE);  // recursive call of itself
+        Backtrace( POOL, path, MIN_MAX_ENERGY, PATH_MAX, edges[i].GetNode(), FIRST_NODE);  // recursive call of itself
     }
 }
 
