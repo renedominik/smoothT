@@ -256,6 +256,7 @@ void WritePDB( std::ofstream &OUT, const std::string &NAME, const float &MIN, co
 			{
 				OUT << "TER" << std::endl;
 			}
+			prev = line[21];
     		//	WritePos( line, POS[count] );
     		if( loc == 0){WriteBFactor( line, MIN);}
     		else if( loc == 1){WriteBFactor( line, MAX);}   // DOES NOT MAKE MUCH SENSE !!!!
