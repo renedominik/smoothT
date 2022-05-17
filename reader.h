@@ -242,10 +242,20 @@ void WritePDB( std::ofstream &OUT, const std::string &NAME, const float &MIN, co
 		//count = -1,
 		loc = 0;
 
+    char
+		prev = ' ';
     while( std::getline(in, line ) ){
     	if( line.size() < 3){ continue;}
     	else if( line.substr(0,4) == "ATOM" || line.substr(0,6) == "HETATM")
     	{
+			if( prev == ' ')
+			{
+				prev = line[21];
+			}
+			if( line[21] != prev)  // for empty chain entries this will not write TERs. for empty chains check resid
+			{
+				OUT << "TER" << std::endl;
+			}
     		//	WritePos( line, POS[count] );
     		if( loc == 0){WriteBFactor( line, MIN);}
     		else if( loc == 1){WriteBFactor( line, MAX);}   // DOES NOT MAKE MUCH SENSE !!!!
@@ -255,8 +265,12 @@ void WritePDB( std::ofstream &OUT, const std::string &NAME, const float &MIN, co
 			//	++count;
     	}
     	else if(  line.substr(0,3) == "END")
-    	{ return;}
+    	{
+    		OUT << "TER" << std::endl;
+    		return;
+    	}
     }
+    OUT << "TER" << std::endl;
     in.close();
     in.clear();
 }

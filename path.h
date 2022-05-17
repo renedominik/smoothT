@@ -131,8 +131,13 @@ bool Iterate
 		const std::shared_ptr< Node > & LAST
  )
 {
-	static int count = 0;
+	static int
+		count = 0;
     ++count;
+
+//    static int
+//		prev_nr_connected = -1;
+
 //    std::cout << __FUNCTION__ << " " << LATEST.size() << " " << REMAINING.size() << std::endl;
     std::list< std::shared_ptr< Node > >
     	connected;
@@ -172,7 +177,6 @@ bool Iterate
 
     connected.unique();
 
-    std::cout << __FUNCTION__ << " unique nr connected " << connected.size() << std::endl;
 
     // stop if no new connections found
     if( connected.size() == 0 )
@@ -191,12 +195,21 @@ bool Iterate
     	}
     }
 
+    std::cout << __FUNCTION__ << " " << count << ": unique nr connected " << connected.size() << " remaining: " << REMAINING.size() << std::endl;
+
     // stop if no nodes are in REMAINING
     if( REMAINING.size() == 0 )
     {
     	std::cout << "no remaining nodes, iteration is terminated" << std::endl;
     	return false;
     }
+
+//    if( connected.size() == prev_nr_connected)
+//    {
+//    	std::cout  << __FUNCTION__<< " no new connections found in this iteration, terminate" << std::endl;
+//    	return false;
+//    }
+//    prev_nr_connected = connected.size();
 
 
     // pass newly connected to latest for next iteration
@@ -208,10 +221,9 @@ bool Iterate
     // stop if LAST node is in LATEST
     if( std::find( LATEST.begin(), LATEST.end(), LAST) != LATEST.end())
     {
-    	std::cout << __FUNCTION__ <<" connected to last node in iteration: " << count << std::endl;
-        std::cout << "final (first node) has " << LAST->GetParentEdges().size() << " parent edges" << std::endl;
-        std::cout << REMAINING.size() << " remaining nodes (these nodes are not linked to graph)." << std::endl;
-        return false;
+        std::cout << "hooked up last node (first node), having " << LAST->GetParentEdges().size() << " parent edges" << std::endl;
+//        std::cout << REMAINING.size() << " remaining nodes (these nodes are not linked to graph)." << std::endl;
+//        return false;
     }
 
     // continue

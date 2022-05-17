@@ -112,7 +112,7 @@ Help()
 void Author()
 {
 	std::cout << "Author: Rene Staritzbichler, rene@staritzbichler.com, http://proteinformatics.org , 10.10.2019\n" << std::endl;
-	std::cout << "please cite: \nStaritzbichler R, Hildebrand P, 2020\n\"smoothT\"\n\n\n" << std::endl;
+	std::cout << "please cite: \nStaritzbichler R, Hildebrand P, 202X\n\"smoothT\"\n\n\n" << std::endl;
 }
 
 
@@ -385,6 +385,8 @@ int main(  int ARGC, char ** ARGV)
 				int
 					count = 1;
 
+				out    << "#  NR  RMSD-TO-PREVIOUS  RMSD-SUM  ENERGY  NAME " << std::endl;
+				trance << "#  NR  RMSD-TO-PREVIOUS  RMSD-SUM  ENERGY  NAME.pdb/TRANSITION-STEP " << std::endl;
 				if( !out){ std::cerr << "ERROR: not opened energy output file: " << std::endl;}
 				for( unsigned int i = 1; i <= energies.size(); ++i)
 				{
@@ -395,7 +397,7 @@ int main(  int ARGC, char ** ARGV)
 					if( i < energies.size())
 					{ EnergyTransition( trance , rmsd , sum , offset , energies[energies.size()-i] , energies[energies.size()-i-1] , 20 , count, 0.2 , width );}
 				}
-				out << "# rmsd: " << sum << " barrier: " << previous << " sum: " << jtr->first << std::endl;
+				out << "# rmsd-sum: " << sum << " energy-barrier: " << previous << " energy-sum: " << jtr->first << std::endl;
 				out.close(); out.clear();
 				trance.close(); trance.clear();
 
@@ -453,7 +455,7 @@ int main(  int ARGC, char ** ARGV)
 //		for( auto& e : energies)
 //		{ score += e;}
 		//
-		float score = -1.0 * float(energies.size()) * min_max.first;
+		float score = -1.0 * float(energies.size()) * min_max.first;  // shift values to be all positive -> smallest value will represent shortest path
 		std::cout << "base score: " << score << " ";
 		for( auto& e : energies)
 		{ score += e; std::cout << e << " ";}
