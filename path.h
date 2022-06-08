@@ -153,7 +153,7 @@ bool Iterate
 	j = 0;
     	for( std::vector< std::shared_ptr< Node > >::iterator ltr = LATEST.begin(); ltr != LATEST.end(); ++ltr, ++j)
         {
-    		if( *rtr == *ltr)
+    		if( *rtr == *ltr && *rtr != LAST )
     		{
     			std::cout << __FUNCTION__ << ": WARNING: nodes are equal!" << std::endl;
     			break;
@@ -188,7 +188,7 @@ bool Iterate
     // remove connected from remaining
     for( std::vector< std::shared_ptr< Node > >::iterator itr = REMAINING.begin(); itr != REMAINING.end(); ++itr)
     {
-    	if( find( connected.begin(), connected.end(), *itr) != connected.end() )
+    	if( find( connected.begin(), connected.end(), *itr) != connected.end() && *itr != LAST)
     	{
     		REMAINING.erase( itr);
     		--itr;
@@ -198,7 +198,7 @@ bool Iterate
     std::cout << __FUNCTION__ << " " << count << ": unique nr connected " << connected.size() << " remaining: " << REMAINING.size() << std::endl;
 
     // stop if no nodes are in REMAINING
-    if( REMAINING.size() == 0 )
+    if( REMAINING.size() == 0 || (REMAINING.size() == 1 && REMAINING[0] == LAST))
     {
     	std::cout << "no remaining nodes, iteration is terminated" << std::endl;
     	return false;
@@ -223,7 +223,7 @@ bool Iterate
     {
         std::cout << "hooked up last node (first node), having " << LAST->GetParentEdges().size() << " parent edges" << std::endl;
 //        std::cout << REMAINING.size() << " remaining nodes (these nodes are not linked to graph)." << std::endl;
-//        return false;
+	// return false;  //////    VERSION 1.0  === TODO: block and find better strategy! ////////////
     }
 
     // continue
@@ -246,6 +246,12 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
 //        std::copy( PATH.begin(), PATH.end(), std::ostream_iterator<int>( std::cout , " ") );
 //        std::cout << std::endl;
         POOL.insert( std::make_pair( PATH_MAX , PATH));
+
+	// TODO: include size managment here!!
+
+	if(POOL.size() > 21000)
+	  {POOL =  std::multimap< float, std::vector<int> >( POOL.begin(), POOL.begin() + 20000);}
+	
         return; // ENDS FUNCTION
     }
 

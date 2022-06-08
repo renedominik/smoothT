@@ -348,10 +348,10 @@ int main(  int ARGC, char ** ARGV)
 				if( count + 1 < nr_output && i2 + 1 < (signed) sub_sorted.size())
 				{ gnu << ", ";}
 
-				std::cout << count << " " << previous << "  " << jtr->first << ":  ";
-				for( int i3 : jtr->second)
-				{ std::cout << i3 << " ";}
-				std::cout << std::endl;
+//				std::cout << count << " " << previous << "  " << jtr->first << ":  ";
+//				for( int i3 : jtr->second)
+//				{ std::cout << i3 << " ";}
+//				std::cout << std::endl;
 
 				// calc sum of energies of all nodes in path
 				names.clear();
@@ -373,7 +373,7 @@ int main(  int ARGC, char ** ARGV)
 					min_energy = *std::min_element( energies.begin(), energies.end() ),
 					max_energy = *std::max_element( energies.begin(), energies.end() );
 
-				std::cout << "sum: " << jtr->first << " barrier: " << previous << " energy range: " << min_energy << " " << max_energy << std::endl;
+//				std::cout << "sum: " << jtr->first << " barrier: " << previous << " energy range: " << min_energy << " " << max_energy << std::endl;
 
 				std::ofstream
 					out( outdir + "/" + energy_file),
@@ -456,10 +456,10 @@ int main(  int ARGC, char ** ARGV)
 //		{ score += e;}
 		//
 		float score = -1.0 * float(energies.size()) * min_max.first;  // shift values to be all positive -> smallest value will represent shortest path
-		std::cout << "base score: " << score << " ";
+//		std::cout << "base score: " << score << " ";
 		for( auto& e : energies)
-		{ score += e; std::cout << e << " ";}
-		std::cout << " final: " << score << std::endl;
+		{ score += e; /*std::cout << e << " ";*/}
+//		std::cout << " final: " << score << std::endl;
 
 		sub_sorted.insert( std::make_pair( score, itr->second) );
 	}  // iterating score_sorted_paths
