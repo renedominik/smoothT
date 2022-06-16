@@ -242,7 +242,7 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
     PATH_MAX = std::max( PATH_MAX, NODE->GetEnergy());
 
     // EITHER YOU HAVE A COMPLETE PATH
-    if( *NODE == *FIRST_NODE){      // ptr vs obj
+    if( *NODE == *FIRST_NODE){
 //        std::cout << __FUNCTION__ << " connected to first node: " << std::endl;
 //        std::cout << NODE->GetName() << " ";
 //        std::cout << FIRST_NODE->GetName() << std::endl;
@@ -250,10 +250,14 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
 //        std::cout << std::endl;
         POOL.insert( std::make_pair( PATH_MAX , PATH));
 
-	// TODO: include size managment here!!
-
-//	if(POOL.size() > 21000)
-//	  {POOL =  std::multimap< float, std::vector<int> >( POOL.begin(), POOL.begin() + 20000);}
+        // avoid too large POOL
+		if(POOL.size() > 25000)
+		{
+			auto b = POOL.begin();
+			for( int i = 0; i < 20000; ++i)
+			{ ++b;}
+			POOL =  std::multimap< float, std::vector<int> >( POOL.begin(), b);
+		}
 	
         return; // ENDS FUNCTION
     }
@@ -261,6 +265,7 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
     // OR YOU STILL ARE ON THE WAY TO THE FIRST NODE
 
     auto edges = NODE->GetParentEdges();
+
 //    std::cout << edges.size() << " edges" << std::endl;
     if( edges.size() == 0)
     {
