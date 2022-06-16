@@ -165,7 +165,7 @@ bool Iterate
 
     		if( distance < MAX_DIST)
     		{
-    			(*rtr)->AddParent( *ltr , distance);
+    			(*rtr)->AddParent( *ltr , distance);  // add pointer to parent, for backtrace construction of pathways
     			connected.push_back( *rtr );
     		}
     		//if( distance < 100 ){ std::cout << "d: " << distance << std::endl;}
@@ -237,7 +237,10 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
 //    std::cout << __FUNCTION__ << " " << POOL.size() << " " << PATH.size() << " " << MIN_MAX_ENERGY.first << " " << MIN_MAX_ENERGY.second << " " << NODE->GetEnergy() << std::endl;
     MIN_MAX_ENERGY.first  = std::min( MIN_MAX_ENERGY.first , NODE->GetEnergy());
     MIN_MAX_ENERGY.second = std::max( MIN_MAX_ENERGY.second, NODE->GetEnergy());
+
+    //// ENERGY BARRIER OF GIVEN PATH:
     PATH_MAX = std::max( PATH_MAX, NODE->GetEnergy());
+
     // EITHER YOU HAVE A COMPLETE PATH
     if( *NODE == *FIRST_NODE){      // ptr vs obj
 //        std::cout << __FUNCTION__ << " connected to first node: " << std::endl;
@@ -249,8 +252,8 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
 
 	// TODO: include size managment here!!
 
-	if(POOL.size() > 21000)
-	  {POOL =  std::multimap< float, std::vector<int> >( POOL.begin(), POOL.begin() + 20000);}
+//	if(POOL.size() > 21000)
+//	  {POOL =  std::multimap< float, std::vector<int> >( POOL.begin(), POOL.begin() + 20000);}
 	
         return; // ENDS FUNCTION
     }

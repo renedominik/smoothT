@@ -129,6 +129,7 @@ int main(  int ARGC, char ** ARGV)
 		return 0;
 	}
 
+	//  ===== DECLARATIONS =====
 	std::vector< std::string>
     	atom_types;
 	std::vector< char>
@@ -252,7 +253,7 @@ int main(  int ARGC, char ** ARGV)
 	std::cout << all.size() + 1 << " nodes read" << std::endl;
 
 	std::vector< std::shared_ptr< Node> >
-		current;
+		current;  // jeweiliger Startpunkt bei jeder iteration
 	current.push_back( first_node);
 
 
