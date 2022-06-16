@@ -247,10 +247,13 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
 //        std::cout << std::endl;
         POOL.insert( std::make_pair( PATH_MAX , PATH));
 
-	// TODO: include size managment here!!
-
-	if(POOL.size() > 21000)
-	  {POOL =  std::multimap< float, std::vector<int> >( POOL.begin(), POOL.begin() + 20000);}
+		if(POOL.size() > 25000)
+		{
+			auto b = POOL.begin();
+			for( int i = 0; i < 20000; ++i)
+			{ ++b;}
+			POOL =  std::multimap< float, std::vector<int> >( POOL.begin(), POOL.begin() + 20000);
+		}
 	
         return; // ENDS FUNCTION
     }
