@@ -9,6 +9,7 @@
 #define PATH_H_
 
 
+// path = graph consists of nodes and edges
 
 
 // forward declaration
@@ -18,17 +19,28 @@ class Node;
 class Edge
 {
 private:
-	std::shared_ptr<Node> m_Node;
-	float                 m_Dist;
+	std::shared_ptr<Node> m_Node;   // pointer to parent
+	float                 m_Dist;   // RMSD of current and parent node
 public:
+	// default constructur
 	Edge()
 	: m_Node(), m_Dist(){}
 
+	// construct from member
 	Edge( const std::shared_ptr<Node> &NODE, const float & DIST)
 	: m_Node( NODE), m_Dist( DIST){}
 
+	// copy constructor
+	Edge( const Edge &A)
+	: m_Node( A.m_Node), m_Dist( A.m_Dist)
+	{}
+
+	// destructor
+	~Edge(){}
+
 	const float &
-	GetDistance() const {return m_Dist;}
+	GetDistance() const
+	{return m_Dist;}
 
 	const std::shared_ptr<Node> &
 	GetNode() const
@@ -37,29 +49,19 @@ public:
 };
 
 
+// node contains protein conformations
 class Node
 {
 private:
-  std::string m_Name;
-  float m_Energy;
-  std::vector< std::vector< float > > m_Pos; // list of atom positions
-  // list of atoms containing a list of x,y,z coordinates
-  /* python 
-  m_Pos = []
-  with open( filename) as r:
-     for l in r:
-         if "ATOM" = l[:4]:
-	     x = float( l[46:54]
-	     y = ...
-	     z = ....
-	     m_Pos.append( [x,y,z] )
-  */  
-  std::vector< Edge> m_Parents;
+  std::string m_Name;                             // file name
+  float m_Energy;                                 // energy/score describing stored conformation
+  std::vector< std::vector< float > > m_Pos;      // list of atom positions  // only information stored from PDB
+  std::vector< Edge> m_Parents;                   // list of edges to parent nodes
 
 public:
   // constructor
 	Node( const std::string &NAME, const std::string &ENERGY_IDENTIFIER, const std::vector< std::string> &ATOM_TYPES, const std::vector<char> &CHAINS,  const std::map<char,std::string> &ALIGNMENT)
-    : m_Name( NAME), m_Energy(), m_Parents()
+    : m_Name( NAME), m_Energy(), m_Pos(), m_Parents()
 	{
 		//std::cout << __FUNCTION__ << " construct from: <" << NAME << "> <" << ENERGY_IDENTIFIER << ">" << std::endl;
 		auto all = ReadPDBPositionsAndEnergy( NAME, ENERGY_IDENTIFIER, ATOM_TYPES, CHAINS, ALIGNMENT);
@@ -122,7 +124,7 @@ std::ostream & operator << ( std::ostream &OUT, const Node &N1)
 
 
 
-
+// function for graph construction
 bool Iterate
 (
 		std::vector< std::shared_ptr< Node > > & LATEST,
@@ -253,7 +255,7 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
         // avoid too large POOL
 		if(POOL.size() > 25000)
 		{
-			auto b = POOL.begin();
+			std::multimap< float, std::vector<int> >::iterator b = POOL.begin();
 			for( int i = 0; i < 20000; ++i)
 			{ ++b;}
 			POOL =  std::multimap< float, std::vector<int> >( POOL.begin(), b);

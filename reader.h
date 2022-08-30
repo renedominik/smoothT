@@ -115,14 +115,17 @@ bool CheckPDBLine( const std::string &LINE, const std::vector< std::string> &ATO
   static int prev_resid = -1000;
   static char prev_chain = ' ';
 
+  // consider only pdb lines that contain coordinates:
   if( LINE.size() < 5 || ( LINE.substr(0,4) != "ATOM" && LINE.substr(0,6) != "HETATM"))
     { return false;}
 
   //  std::cout << __FUNCTION__ << std::endl;
   //  std::cout << LINE << std::endl;
+
   int resid;
   auto chain = Chain(LINE);
 
+  // filter for CHAINS and ATOM_TYPES
   if( ( ATOM_TYPES.size() > 0 && std::find( ATOM_TYPES.begin() , ATOM_TYPES.end(), AtomName( LINE) ) == ATOM_TYPES.end() ) ||
       ( CHAINS.size() > 0 && std::find( CHAINS.begin(), CHAINS.end(), chain )  == CHAINS.end() ) )
     { return false;}
@@ -130,32 +133,32 @@ bool CheckPDBLine( const std::string &LINE, const std::vector< std::string> &ATO
   //  std::cout << "accepted" << std::endl;
 
   if( ALIGNMENTS.size() > 0){
-    //std::cout << "why?" << std::endl;
-    if( chain != prev_chain)
-      {
-	count = -1;
-	prev_chain = chain;
-      }
+	  //std::cout << "why?" << std::endl;
+	  if( chain != prev_chain)
+	  {
+		  count = -1;
+		  prev_chain = chain;
+	  }
 
-    resid = Resid( LINE);
+	  resid = Resid( LINE);
 
-    if( resid != prev_resid){
-      ++count;
-      prev_resid = resid;
-    }
+	  if( resid != prev_resid){
+		  ++count;
+		  prev_resid = resid;
+	  }
 
-    auto itr = ALIGNMENTS.find(chain);
+	  auto itr = ALIGNMENTS.find(chain);
 
-    //    std::cout << "res: " << itr->second[count] << std::endl;
+	  //    std::cout << "res: " << itr->second[count] << std::endl;
 
-    if( itr == ALIGNMENTS.end() || itr->second[count] == '-'){ return false;}
+	  if( itr == ALIGNMENTS.end() || itr->second[count] == '-'){ return false;}
 
-    if( aa3to1[ Resname(LINE) ] != itr->second[count] )
-      {
-	std::cout << LINE << std::endl;
+	  if( aa3to1[ Resname(LINE) ] != itr->second[count] )
+	  {
+		  std::cout << LINE << std::endl;
 
-	std::cout << "ERROR: " << itr->second[count] << " vs " << aa3to1[ Resname(LINE) ] << std::endl;
-      }
+		  std::cout << "ERROR: " << itr->second[count] << " vs " << aa3to1[ Resname(LINE) ] << std::endl;
+	  }
   }
   //std::cout << "accepted" << std::endl;
   return true;
