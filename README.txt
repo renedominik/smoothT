@@ -1,10 +1,14 @@
+A software for the construction of simple transition pathways.
+
 COMPILATION:
 
  g++ -O3 smoothT.cpp -o smoothT
 
- TUTORIAL:
+TUTORIAL:
  
  smoothT -h
- 
+
+BASIC EXAMPLE:
+ PATH/smoothT -l LIST_OF_PDBS.txt -b START.pdb -e FINAL.pdb -i ENERGY_IDENTIFIER -o OUTDIR -d RMSD_CUTOFF 
  
  
