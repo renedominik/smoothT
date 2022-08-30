@@ -9,6 +9,6 @@ TUTORIAL:
  smoothT -h
 
 BASIC EXAMPLE:
- PATH/smoothT -l LIST_OF_PDBS.txt -b START.pdb -e FINAL.pdb -i ENERGY_IDENTIFIER -o OUTDIR -d RMSD_CUTOFF 
+ smoothT -l LIST_OF_PDBS.txt -b START.pdb -e FINAL.pdb -i ENERGY_IDENTIFIER -o OUTDIR -d RMSD_CUTOFF 
  
  
