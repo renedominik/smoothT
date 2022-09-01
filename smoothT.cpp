@@ -30,6 +30,20 @@
 // g++ -O3 smoothT.cpp -o smoothT
 
 
+struct SortPair
+{
+	bool operator()( const std::pair< float, float> &A , const std::pair< float, float> &B) const
+	{
+		if( A.first == B.first)
+		{
+			return A.second < B.second;
+		}
+		return A.first < B.first;
+	}
+};
+
+
+
 void
 Help()
 {
@@ -45,7 +59,8 @@ Help()
 
 	std::cout << "######     FLAGS OVERVIEW     ######\n";
 	std::cout << "###  REQUIRED FLAGS:  ###\nINPUT:\n";
-	std::cout << "\t-b FILENAME of first node in pathway\n"
+	std::cout <<
+			"\t-b FILENAME of first node in pathway\n"
 			"\t-e FILENAME of last node in pathway\n"
 			"\t-l FILENAME containing list of pdb files to create pathway\n"
 			"\t-d RMSD maximum distance for structures considered to be neighbors(=connected)\n"
@@ -57,9 +72,11 @@ Help()
 	std::cout << "###  OPTIONAL FLAGS:  ###\n"
 			"\t-a CA, C, N, ... atomtypes as in PDB used for RMSD calculation\n"
 			"\t-c CHAIN1 ... chains\n"
-			"\t-z ZERO_ENERGY interaction energy when molecules are separated (default 0.0)\n"
-			"\t-w WIDTH of transition for estimation of energy barriers (default: 5.0)\n"
+//			"\t-z ZERO_ENERGY interaction energy when molecules are separated (default 0.0)\n"
+//			"\t-w WIDTH of transition for estimation of energy barriers (default: 5.0)\n"
 			"\t-n NR of top scoring pathways that are written to output directory (default: 200)\n"
+			"\t-k NR of barriers :: first sorting criterium (default: 5)\n"
+			"\t-z NR of pathways per barrier :: second sorting criterium (default: 20000)\n"
 			"\t-f FILENAME of alignment\n\n" << std::endl;
 
 
@@ -112,7 +129,7 @@ Help()
 void Author()
 {
 	std::cout << "Author: Rene Staritzbichler, rene@staritzbichler.com, http://proteinformatics.org , 10.10.2019\n" << std::endl;
-	std::cout << "please cite: \nStaritzbichler R, Hildebrand P, 202X\n\"smoothT\"\n\n\n" << std::endl;
+	std::cout << "please cite: \nStaritzbichler R, N. Ristic, Hildebrand P, 2022, \n\"smoothT\"\n\n\n" << std::endl;
 }
 
 
@@ -150,16 +167,19 @@ int main(  int ARGC, char ** ARGV)
 	float
 		offset = 0.0,
 		width = 5.0,
+		zero_energy = std::numeric_limits<float>::max(),
 		max_dist;
 	int
 		nr_output = 200,
+		max_nr_paths = 20000,
+		max_nr_barriers = 5,
 		c, id = 0;
 //	bool
 //		read_energies_from_list = false;
 
 	//enum eSortType {maxE,sumE,maxRMSD};
 
-	while( ( c = getopt( ARGC, ARGV, "hb:e:l:d:p:o:t:a:c:f:i:n:w:z:") ) != -1 )
+	while( ( c = getopt( ARGC, ARGV, "hb:e:l:d:p:o:t:a:c:f:i:n:w:z:k:") ) != -1 )
     {
 		switch(c)
 		{
@@ -190,6 +210,12 @@ int main(  int ARGC, char ** ARGV)
 		case 'n':
 			if(optarg) nr_output = std::atoi(optarg);
 			break;
+		case 'k':
+			if(optarg) max_nr_paths = std::atoi(optarg);
+			break;
+		case 'z':
+			if(optarg) max_nr_barriers = std::atoi(optarg);
+			break;
 //		case 'm':
 //			read_energies_from_list = true;
 //			break;
@@ -204,9 +230,9 @@ int main(  int ARGC, char ** ARGV)
 		case 'w':
 			if( optarg ) width = atof( optarg );
 			break;
-		case 'z':
-			if( optarg)	offset = atof(optarg);
-			break;
+//		case 'z':
+//			if( optarg)	offset = atof(optarg);
+//			break;
 		}
     }
 
@@ -243,6 +269,7 @@ int main(  int ARGC, char ** ARGV)
 		std::shared_ptr<Node> tmp( new Node( file, energy_identifyer, atom_types, chains, alignments[id]));
 		if( tmp->GetPos().size() > 0){
 			all.push_back( tmp ); }
+		zero_energy = std::min( zero_energy, tmp->GetEnergy());
     }
 
 	all.push_back( last_node); // !!! ???
@@ -251,218 +278,56 @@ int main(  int ARGC, char ** ARGV)
 	in.clear();
 
 	std::cout << all.size() + 1 << " nodes read" << std::endl;
+	std::cout << "zero energy: " << zero_energy << std::endl;
 
 	std::vector< std::shared_ptr< Node> >
 		current;  // jeweiliger Startpunkt bei jeder iteration
 	current.push_back( first_node);
 
+//// TODO CHECK !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//	//////  switch first node 'off'  /////////////////////////////
+//	float
+//		initial_first_energy = first_node->GetEnergy();
+//	current[0]->SetEnergy( 0.0);
+//	std::cout << "switch off first node: " << first_node->GetEnergy()  << std::endl;
+//	//////////////////////////////////////////////////////////////
 
-	//////  switch first node 'off'  /////////////////////////////
-	float
-		initial_first_energy = first_node->GetEnergy();
-	current[0]->SetEnergy( 0.0);
-	std::cout << "switch off first node: " << first_node->GetEnergy()  << std::endl;
-	//////////////////////////////////////////////////////////////
 
+	std::cout << "STATUS: constructing graph ... " << std::endl;
 
+	////////////////////////////////////////////////////////
+	////////////////      BUILD GRAPH    ///////////////////
 	// network/graph building loop
 	while( Iterate( current, all, max_dist, last_node) ){}
+	////////////////////////////////////////////////////////
 
-	// score sorted paths
-	std::multimap< float, std::vector<int> >
+
+	std::cout << "STATUS: graph constructed" << std::endl;
+
+
+	//// score sorted paths  ===  POOL of pathways   ////
+	// multimap: dictionary with multiple identical keys
+	// float: energy barrier
+	// vector<int>: ids of nodes constituting a pathway
+//	std::multimap< std::pair< float, float>, std::vector<int> , SortPair >
+//		score_sorted_paths;
+	std::map< float, std::multimap< float, std::vector<int> > >
 		score_sorted_paths;
+
+
 	std::vector<int>
 		path;
 	node = last_node;
 
-	// go through all possible pathways through the graph, search best solution
-	std::pair< float, float>
-		min_max = std::make_pair( 1e10, -1e10);
-	Backtrace( score_sorted_paths, path, min_max, -1e10, node, first_node);
-	min_max.first = std::min( min_max.first, initial_first_energy);
-	min_max.second = std::max( min_max.second, initial_first_energy);
-	std::cout << "energy min: " << min_max.first << " max: " << min_max.second << std::endl;
+	/////////////////////////////////////////////////////////////////////////////////////////
+	///////////////    EXTRACT PATHWAYS FROM GRAPH     //////////////////////////////////////
+	Backtrace( score_sorted_paths, path, zero_energy, node, first_node, last_node, max_nr_barriers, max_nr_paths);
+	/////////////////////////////////////////////////////////////////////////////////////////
 
-	std::cout << score_sorted_paths.size() << " complete paths" << std::endl;
-	std::cout << "minimum energy path: " << score_sorted_paths.begin()->first << std::endl;
+	Write( score_sorted_paths, last_node, outdir);
 
-//	std::cout << "all paths, sorted by energy threshold: " << std::endl;
-//	for( std::multimap< float, std::vector<int> >::const_iterator itr = score_sorted_paths.begin(); itr != score_sorted_paths.end(); ++itr)
-//	{
-//		std::cout << itr->first + initial_first_energy << ": ";
-//		for( int i : itr->second)
-//		{ std::cout << i << " ";}
-//		std::cout << std::endl;
-//    }
-
-	std::cout << "nr parents of first node (should be 0): " << first_node->GetParentEdges().size() << std::endl;
-
-
-	//////  switch first node back 'on'  /////////////////////////////
-	first_node->SetEnergy( initial_first_energy);
-	std::cout << "switch first node back on: " << first_node->GetEnergy() << std::endl;
-	//////////////////////////////////////////////////////////////
-
-
-	//////////////////////////////
-	////   second sorting     ////
-	//////////////////////////////
-	std::cout << "sort paths belonging to same energy barrier by sum of energies " << std::endl;
-	std::multimap< float, std::vector<int> >
-		sub_sorted;
-	std::vector<float>
-		energies,
-		rmsds;
-	std::vector<std::string>
-		names;
-	float
-		//integral,
-		previous = score_sorted_paths.begin()->first;
-	int
-		count = 0,
-		cc = 1,
-		i1 = 0;
-	std::cout << "print only first " << nr_output << " paths" << std::endl;
-	for( std::multimap< float, std::vector<int> >::const_iterator itr = score_sorted_paths.begin(); itr != score_sorted_paths.end() && count < nr_output; ++itr, ++cc)
-	{
-
-		if( itr->first != previous || cc == (signed) score_sorted_paths.size() || count == nr_output - 1)
-		{
-//			previous = itr->first;  // now last line of block!
-			int i2 = 0;
-
-			// for plotting energy profiles along pathways with gnuplot
-			std::ofstream
-				gnu( outdir + "/gnu_" + std::to_string( i1) + ".txt");
-			gnu << "plot ";
-
-			// write sub_sorted
-			for( std::multimap< float, std::vector<int> >::const_iterator jtr = sub_sorted.begin(); jtr != sub_sorted.end() && count < nr_output; ++jtr, ++i2, ++count )
-			{
-				std::string
-					tail = "_" + std::to_string( i1) + "_" + std::to_string( i2) + ".txt",
-					energy_file = "energy" + tail,
-					transition_file = "transition" + tail,
-					path_file = "path" + tail;
-				gnu << "\"" + energy_file + "\" us 3:4 w l ti \"\"";   //  for plotting of profiles
-//				gnu << "\"" + energy_file + "\" us 3:4 w l ti \"" + std::to_string( i2) + "\"";
-				if( count + 1 < nr_output && i2 + 1 < (signed) sub_sorted.size())
-				{ gnu << ", ";}
-
-//				std::cout << count << " " << previous << "  " << jtr->first << ":  ";
-//				for( int i3 : jtr->second)
-//				{ std::cout << i3 << " ";}
-//				std::cout << std::endl;
-
-				// calc sum of energies of all nodes in path
-				names.clear();
-				energies.clear();
-				rmsds.clear();
-				node = last_node;
-				for( std::vector<int>::const_iterator ktr = jtr->second.begin(); ktr != jtr->second.end(); ++ktr)
-				{
-					energies.push_back( node->GetEnergy() );
-					names.push_back( node->GetName());
-					edge = node->GetParentEdges()[*ktr];
-					rmsds.push_back( edge.GetDistance() );
-					node = edge.GetNode();
-				}
-				energies.push_back( node->GetEnergy() );
-				names.push_back( node->GetName());
-
-				float
-					min_energy = *std::min_element( energies.begin(), energies.end() ),
-					max_energy = *std::max_element( energies.begin(), energies.end() );
-
-//				std::cout << "sum: " << jtr->first << " barrier: " << previous << " energy range: " << min_energy << " " << max_energy << std::endl;
-
-				std::ofstream
-					out( outdir + "/" + energy_file),
-					trance( outdir + "/" + transition_file);
-
-				// write energies to file
-				float
-					rmsd = 0, sum = 0;
-				int
-					count = 1;
-
-				out    << "#  NR  RMSD-TO-PREVIOUS  RMSD-SUM  ENERGY  NAME " << std::endl;
-				trance << "#  NR  RMSD-TO-PREVIOUS  RMSD-SUM  ENERGY  NAME.pdb/TRANSITION-STEP " << std::endl;
-				if( !out){ std::cerr << "ERROR: not opened energy output file: " << std::endl;}
-				for( unsigned int i = 1; i <= energies.size(); ++i)
-				{
-					sum += rmsd;
-					out    << i << "\t" << rmsd << "\t" << sum << "\t" << energies[energies.size()-i] << "\t" << names[energies.size()-i] << std::endl;
-					trance << count << "\t" << rmsd << "\t" << sum << "\t" << energies[energies.size()-i] << "\t" << names[energies.size()-i] << std::endl;
-					rmsd = rmsds[rmsds.size() - i];
-					if( i < energies.size())
-					{ EnergyTransition( trance , rmsd , sum , offset , energies[energies.size()-i] , energies[energies.size()-i-1] , 20 , count, 0.2 , width );}
-				}
-				out << "# rmsd-sum: " << sum << " energy-barrier: " << previous << " energy-sum: " << jtr->first << std::endl;
-				out.close(); out.clear();
-				trance.close(); trance.clear();
-
-//					// TODO: energy barrier estimation // extra script???
-//					if( out_transition_file != "")
-//					{
-//						out.open( out_transition_file.c_str());
-//						if(!out){ std::cerr << "ERROR: not opened transition energy file: <" << out_transition_file << ">" << std::endl; }
-//
-//						for( unsigned int i = 0; i < energies.size(); ++i)
-//						{ out << i << "\t" << energies[i] << "\t" << names[i] << std::endl;}
-//
-//						out.close(); out.clear();
-//					}
-
-
-				// collect PDBs for creating nice movie
-				out.open( ( outdir + "/path_" + std::to_string( i1) + "_" + std::to_string( i2) + ".pdb").c_str() );
-				if(!out){ std::cerr << "ERROR: not opened pdb output file: " << std::endl; }
-
-				// pdb with all models for visualization
-				for( unsigned int i = 0; i < names.size(); ++i)
-				{
-					int id = names.size() - i - 1;
-					out << "MODEL " << i << std::endl;
-					out << "HEADER" << std::endl;
-					out << names[id] << "\t" << energies[id] << std::endl;
-					WritePDB( out, names[id], min_energy, energies[id], max_energy );
-					out << "ENDMDL" << std::endl;
-				}
-				out.close();
-				out.clear();
-			}
-			++i1;
-			sub_sorted.clear();
-			gnu.close();
-			gnu.clear();
-
-			previous = itr->first;
-		}  // primary score improved
-
-		// calc sum of energies of all nodes in path
-		energies.clear();
-		node = last_node;
-		for( std::vector<int>::const_iterator jtr = itr->second.begin(); jtr != itr->second.end(); ++jtr)
-		{
-			energies.push_back( node->GetEnergy() );
-			edge = node->GetParentEdges()[*jtr];
-			node = edge.GetNode();
-		}
-		energies.push_back( node->GetEnergy() );
-
-		// secondary score calculated here:
-//		float score = 0.0;
-//		for( auto& e : energies)
-//		{ score += e;}
-		//
-		float score = -1.0 * float(energies.size()) * min_max.first;  // shift values to be all positive -> smallest value will represent shortest path
-//		std::cout << "base score: " << score << " ";
-		for( auto& e : energies)
-		{ score += e; /*std::cout << e << " ";*/}
-//		std::cout << " final: " << score << std::endl;
-
-		sub_sorted.insert( std::make_pair( score, itr->second) );
-	}  // iterating score_sorted_paths
-
+	std::cout << "STATUS: finished" << std::endl;
+	return 0;
 };
+
+

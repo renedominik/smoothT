@@ -146,8 +146,8 @@ bool Iterate
     float
 		distance;
 
-    std::ofstream
-		out( "pathway/rmsds" + std::to_string(count) + ".txt");
+//    std::ofstream
+//		out( "pathway/rmsds" + std::to_string(count) + ".txt");
     int i = 0, j = 0;
     // find remaining that are connected to latest
     for( std::vector< std::shared_ptr< Node > >::const_iterator rtr = REMAINING.begin(); rtr != REMAINING.end(); ++rtr, ++i)
@@ -163,7 +163,7 @@ bool Iterate
 
     		distance = RMSD( (*rtr)->GetPos(), (*ltr)->GetPos() );
 
-    		out << i << "\t" << j << "\t" << distance << "\t" << (*ltr)->GetName() << "\t" << (*rtr)->GetName() << std::endl;
+//    		out << i << "\t" << j << "\t" << distance << "\t" << (*ltr)->GetName() << "\t" << (*rtr)->GetName() << std::endl;
 
     		if( distance < MAX_DIST)
     		{
@@ -173,7 +173,7 @@ bool Iterate
     		//if( distance < 100 ){ std::cout << "d: " << distance << std::endl;}
         }
       }
-    out.clear(); out.close();
+//    out.clear(); out.close();
 
 //    std::cout << "nr connected " << connected.size() << std::endl;
 
@@ -233,33 +233,155 @@ bool Iterate
 }
 
 
-// PATH here is more a navigation instruction, which edge to follow in a specific node
-void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<int> PATH, std::pair<float,float> & MIN_MAX_ENERGY, float PATH_MAX , const std::shared_ptr< Node> & NODE, std::shared_ptr< Node> &FIRST_NODE)
+
+void Insert
+(
+		const std::vector<int> & PATH,
+		std::map< float, std::multimap< float, std::vector<int> > > & POOL,
+		const std::shared_ptr< Node> &LAST_NODE,
+		const float & ZERO_ENERGY,
+		const int & MAX_NR_BARRIERS,
+		const int & MAX_NR_PATHS
+)
 {
-//    std::cout << __FUNCTION__ << " " << POOL.size() << " " << PATH.size() << " " << MIN_MAX_ENERGY.first << " " << MIN_MAX_ENERGY.second << " " << NODE->GetEnergy() << std::endl;
-    MIN_MAX_ENERGY.first  = std::min( MIN_MAX_ENERGY.first , NODE->GetEnergy());
-    MIN_MAX_ENERGY.second = std::max( MIN_MAX_ENERGY.second, NODE->GetEnergy());
+	std::vector<float>
+		rmsds,
+		energies;
+	std::shared_ptr< Node>
+		node = LAST_NODE;
+	Edge
+		edge;
+	for( std::vector<int>::const_iterator itr = PATH.begin(); itr != PATH.end(); ++itr)
+	{
+		energies.push_back( node->GetEnergy() - ZERO_ENERGY);
+		edge = node->GetParentEdges()[*itr];
+		rmsds.push_back( edge.GetDistance() );
+		node = edge.GetNode();
+	}
+	energies.push_back( node->GetEnergy() - ZERO_ENERGY);
+	float
+		barrier = *std::max_element( energies.begin(), energies.end()),
+		integral = 0.0;
+	for( int i = 0; i < rmsds.size(); ++i)
+	{
+		integral += 0.5* rmsds[i] * (energies[i] + energies[i+1]);
+	}
+	auto loc = POOL.find( barrier);
+	if( loc  != POOL.end())
+	{
+		// barrier exists in POOL
+		loc->second.insert( std::make_pair( integral, PATH ) );
+		if( loc->second.size() > MAX_NR_PATHS + 500 )
+		{
+			auto x = loc->second.begin();
+			for( int i = 0; i < MAX_NR_PATHS; ++i){ ++x;}
+			loc->second = std::multimap< float, std::vector<int> >( loc->second.begin(), x);
+			std::cout << "trimmed: " << loc->second.size() << std::endl;
+		}
+	}
+	else
+	{
+		// 	new barrier
+		std::multimap< float, std::vector<int> >  m;
+		m.insert( std::make_pair( integral, PATH ) );
+		POOL[barrier] = m;
+		if( POOL.size() > MAX_NR_BARRIERS)
+		{
+			POOL.erase( std::prev( POOL.end() ) );
+		}
+	}
+	// FILTER POOL
 
-    //// ENERGY BARRIER OF GIVEN PATH:
-    PATH_MAX = std::max( PATH_MAX, NODE->GetEnergy());
+}
 
+
+
+void Write
+(
+		std::map< float, std::multimap< float, std::vector<int> > > & POOL,
+		const std::shared_ptr< Node> &LAST_NODE,
+		const std::string & OUTDIR
+)
+{
+	int
+		c1 = 0;
+	for( std::map< float, std::multimap< float, std::vector<int> > >::const_iterator itr = POOL.begin(); itr != POOL.end(); ++itr, ++c1)
+	{
+		int c2 = 0;
+		for( std::multimap< float, std::vector<int> >::const_iterator jtr = itr->second.begin(); jtr != itr->second.end(); ++jtr, ++c2)
+		{
+			std::ofstream
+				out1( OUTDIR + "/energies_" + std::to_string( c1) + "_" + std::to_string(c2) + ".txt"),
+				out2( OUTDIR + "/path_" + std::to_string( c1) + "_" + std::to_string(c2) + ".pdb");
+
+			std::vector<float>
+				energies,
+				rmsds;
+			std::vector<std::string>
+				names;
+			std::shared_ptr< Node>
+				node = LAST_NODE;
+			Edge
+				edge;
+
+			for( std::vector<int>::const_iterator ktr = jtr->second.begin(); ktr != jtr->second.end(); ++ktr)
+			{
+				energies.push_back( node->GetEnergy());
+				names.push_back( node->GetName());
+				edge = node->GetParentEdges()[*ktr];
+				rmsds.push_back( edge.GetDistance() );
+				node = edge.GetNode();
+			}
+			energies.push_back( node->GetEnergy());
+			names.push_back( node->GetName());
+			rmsds.push_back( 0.0);
+
+			std::reverse( energies.begin(), energies.end());
+			std::reverse( rmsds.begin(), rmsds.end());
+			std::reverse( names.begin(), names.end());
+
+
+			float
+				max_energy = *std::max_element( energies.begin(), energies.end()),
+				min_energy = *std::min_element( energies.begin(), energies.end()),
+				rmsd = 0;
+
+			// pdb with all models for visualization
+			for( unsigned int i = 0; i < names.size(); ++i)
+			{
+				rmsd += rmsds[i];
+				out1 << rmsd << "\t" << energies[i] << std::endl;
+				out2 << "MODEL " << i + 1 << std::endl;
+				out2 << "HEADER" << std::endl;
+				out2 << names[i] << "\t" << energies[i] << std::endl;
+				WritePDB( out2, names[i], min_energy, energies[i], max_energy );
+				out2 << "ENDMDL" << std::endl;
+			}
+			out1.close(); out1.clear();
+			out2.close(); out2.clear();
+		}
+
+	}
+
+}
+
+// PATH here is more a navigation instruction, which edge to follow in a specific node
+void Backtrace
+(
+		std::map< float, std::multimap< float, std::vector<int> > > & POOL,
+		std::vector<int> PATH,
+		const float & ZERO_ENERGY,
+		const std::shared_ptr< Node> & NODE,
+		const std::shared_ptr< Node> &FIRST_NODE,
+		const std::shared_ptr< Node> &LAST_NODE,
+		const int & MAX_NR_BARRIERS,
+		const int & MAX_NR_PATHS
+)
+{
     // EITHER YOU HAVE A COMPLETE PATH
     if( *NODE == *FIRST_NODE){
-//        std::cout << __FUNCTION__ << " connected to first node: " << std::endl;
-//        std::cout << NODE->GetName() << " ";
-//        std::cout << FIRST_NODE->GetName() << std::endl;
-//        std::copy( PATH.begin(), PATH.end(), std::ostream_iterator<int>( std::cout , " ") );
-//        std::cout << std::endl;
-        POOL.insert( std::make_pair( PATH_MAX , PATH));
 
-        // avoid too large POOL
-		if(POOL.size() > 25000)
-		{
-			std::multimap< float, std::vector<int> >::iterator b = POOL.begin();
-			for( int i = 0; i < 20000; ++i)
-			{ ++b;}
-			POOL =  std::multimap< float, std::vector<int> >( POOL.begin(), b);
-		}
+    	Insert( PATH, POOL, LAST_NODE, ZERO_ENERGY, MAX_NR_BARRIERS, MAX_NR_PATHS);
 	
         return; // ENDS FUNCTION
     }
@@ -278,7 +400,8 @@ void Backtrace(  std::multimap< float, std::vector<int> > & POOL, std::vector<in
     {
         auto path = PATH;
         path.push_back( i );  // extending the path with current edge ID
-        Backtrace( POOL, path, MIN_MAX_ENERGY, PATH_MAX, edges[i].GetNode(), FIRST_NODE);  // recursive call of itself
+        // ID is representing the local structure of the graph
+        Backtrace( POOL, path, ZERO_ENERGY, edges[i].GetNode(), FIRST_NODE, LAST_NODE, MAX_NR_BARRIERS, MAX_NR_PATHS);  // recursive call of itself
     }
 }
 
