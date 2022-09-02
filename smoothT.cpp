@@ -299,10 +299,15 @@ int main(  int ARGC, char ** ARGV)
 
 	std::cout << "STATUS: constructing graph ... " << std::endl;
 
+	std::vector< std::vector< std::shared_ptr< Node > > >
+		generations;
+
+	Shift( last_node, zero_energy);
+
 	////////////////////////////////////////////////////////
 	////////////////      BUILD GRAPH    ///////////////////
 	// network/graph building loop
-	while( Iterate( current, all, max_dist, last_node) ){}
+	while( Iterate( current, all, max_dist, last_node, generations) ){}
 	////////////////////////////////////////////////////////
 
 	clock_t now2 = clock();
@@ -324,9 +329,13 @@ int main(  int ARGC, char ** ARGV)
 		path;
 	node = last_node;
 
+	GenerationWalk( generations);
+
+	Backtrace( last_node);
+
 	/////////////////////////////////////////////////////////////////////////////////////////
 	///////////////    EXTRACT PATHWAYS FROM GRAPH     //////////////////////////////////////
-	Backtrace( score_sorted_paths, path, zero_energy, node, first_node, last_node, max_nr_barriers, max_nr_paths);
+//	Backtrace( score_sorted_paths, path, zero_energy, node, first_node, last_node, max_nr_barriers, max_nr_paths);
 	/////////////////////////////////////////////////////////////////////////////////////////
 	now = clock();
 	std::cout << "TIMER: backtrace: " << float( now - now2) / CLOCKS_PER_SEC << std::endl;

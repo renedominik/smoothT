@@ -57,16 +57,20 @@ private:
   float m_Energy;                                 // energy/score describing stored conformation
   std::vector< std::vector< float > > m_Pos;      // list of atom positions  // only information stored from PDB
   std::vector< Edge> m_Parents;                   // list of edges to parent nodes
+  float m_Sum;                                    // sum over energies along (sub)path  (initialized undefined in constructor as max float)
+  float m_Barrier;                                // max over previous (sub)path
+  std::shared_ptr< Node>  m_Best;                 // best parent ever
 
 public:
   // constructor
 	Node( const std::string &NAME, const std::string &ENERGY_IDENTIFIER, const std::vector< std::string> &ATOM_TYPES, const std::vector<char> &CHAINS,  const std::map<char,std::string> &ALIGNMENT)
-    : m_Name( NAME), m_Energy(), m_Pos(), m_Parents()
+    : m_Name( NAME), m_Energy(), m_Pos(), m_Parents(), m_Sum( std::numeric_limits<float>::max()), m_Barrier(), m_Best()
 	{
 		//std::cout << __FUNCTION__ << " construct from: <" << NAME << "> <" << ENERGY_IDENTIFIER << ">" << std::endl;
 		auto all = ReadPDBPositionsAndEnergy( NAME, ENERGY_IDENTIFIER, ATOM_TYPES, CHAINS, ALIGNMENT);
 		m_Energy = all.first;
 		m_Pos = all.second;
+		m_Barrier = m_Energy;
 	}
 
 	~Node(){} // std::cout << __FUNCTION__ << std::endl;}
@@ -100,6 +104,23 @@ public:
 	SetEnergy( const float &VALUE)
 	{ m_Energy = VALUE;}
 
+	const float &
+	GetSum() const
+	{ return m_Sum;}
+
+	void
+	SetSum( const float &VALUE)
+	{  m_Sum = VALUE;}
+
+	const float &
+	GetBarrier() const
+	{ return m_Barrier;}
+
+	void
+	SetBarrier( const float &VALUE)
+	{ m_Barrier = VALUE;}
+
+
 
 	std::ostream & Write( std::ostream &OUT) const
 	{
@@ -130,7 +151,8 @@ bool Iterate
 		std::vector< std::shared_ptr< Node > > & LATEST,
 		std::vector< std::shared_ptr< Node > > & REMAINING,
 		const float & MAX_DIST,
-		const std::shared_ptr< Node > & LAST
+		const std::shared_ptr< Node > & LAST,
+		std::vector< std::vector< std::shared_ptr< Node > > > & GENERATIONS
  )
 {
 	static int
@@ -219,6 +241,8 @@ bool Iterate
     LATEST.clear(); // probably egal
     //std::cout << "end destruction" << std::endl;
     LATEST = std::vector<std::shared_ptr< Node >  >( connected.begin(), connected.end());
+
+    GENERATIONS.push_back( LATEST);
 
     // stop if LAST node is in LATEST
     if( std::find( LATEST.begin(), LATEST.end(), LAST) != LATEST.end())
@@ -406,6 +430,36 @@ void Backtrace
 }
 
 
+void Shift( std::shared_ptr< Node> & NODE, const float &SHIFT)
+{
+	NODE->SetEnergy( NODE->GetEnergy() - SHIFT);
+	for( auto itr = NODE->GetParentEdges().begin(); itr != NODE->GetParentEdges().end(); ++itr)
+	{
+		Shift( itr->GetNode(), SHIFT);
+	}
+}
+
+
+void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > > &GENERATIONS)
+{
+	for( auto gen = GENERATIONS.begin(); gen != GENERATIONS.end(); ++gen)
+		for( auto node = gen->begin(); node != gen->end(); ++node)
+		{
+			float
+				local_sum,
+				local_barrier,
+				sum = 0.0,
+				barrier = std::numeric_limits<float>::lowest();
+			for( auto edge = node->GetParentEdges().begin(); edge != node->GetParentEdges().end(); ++edge)
+			{
+				local_barrier = edge->GetNode().GetBarrier();
+				if( )
+			}
+			// barrier
+			node->SetBarrier( std::max( ))
+			// sum
+		}
+}
 
 
 
