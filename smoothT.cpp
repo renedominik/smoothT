@@ -20,7 +20,6 @@
 #include <string>
 #include <list>
 
-
 #include "string_functions.h"
 #include "reader.h"
 #include "math_functions.h"
@@ -136,6 +135,9 @@ void Author()
 
 int main(  int ARGC, char ** ARGV)
 {
+	const clock_t start_time = clock();
+
+
 	for( int i = 0; i < ARGC; ++i)
 		std::cout << ARGV[i] << "  ";
 	std::cout << "\n\n" << std::endl;
@@ -292,6 +294,8 @@ int main(  int ARGC, char ** ARGV)
 //	std::cout << "switch off first node: " << first_node->GetEnergy()  << std::endl;
 //	//////////////////////////////////////////////////////////////
 
+	clock_t now = clock();
+	std::cout << "TIMER: reading: " << float( now - start_time) / CLOCKS_PER_SEC << std::endl;
 
 	std::cout << "STATUS: constructing graph ... " << std::endl;
 
@@ -301,7 +305,8 @@ int main(  int ARGC, char ** ARGV)
 	while( Iterate( current, all, max_dist, last_node) ){}
 	////////////////////////////////////////////////////////
 
-
+	clock_t now2 = clock();
+	std::cout << "TIMER: graph construction: " << float( now2 - now) / CLOCKS_PER_SEC << std::endl;
 	std::cout << "STATUS: graph constructed" << std::endl;
 
 
@@ -323,8 +328,14 @@ int main(  int ARGC, char ** ARGV)
 	///////////////    EXTRACT PATHWAYS FROM GRAPH     //////////////////////////////////////
 	Backtrace( score_sorted_paths, path, zero_energy, node, first_node, last_node, max_nr_barriers, max_nr_paths);
 	/////////////////////////////////////////////////////////////////////////////////////////
+	now = clock();
+	std::cout << "TIMER: backtrace: " << float( now - now2) / CLOCKS_PER_SEC << std::endl;
+
 
 	Write( score_sorted_paths, last_node, outdir);
+	now2 = clock();
+	std::cout << "TIMER: writing: " << float( now2 - now) / CLOCKS_PER_SEC << std::endl;
+
 
 	std::cout << "STATUS: finished" << std::endl;
 	return 0;
