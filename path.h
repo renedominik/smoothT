@@ -446,17 +446,61 @@ void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > >
 		for( auto node = gen->begin(); node != gen->end(); ++node)
 		{
 			float
-				local_sum,
-				local_barrier,
+				prev_sum,
+				prev_barrier = std::numeric_limits<float>::max(),
+				best_tmp_area = std::numeric_limits<float>::max(),
+				best_area = std::numeric_limits<float>::max(),
 				sum = 0.0,
-				barrier = std::numeric_limits<float>::lowest();
+				prev_area,
+				current_area,
+				barrier = std::numeric_limits<float>::max(),
+				node_area = node->GetEnergy() * edge->GetDistance(),
+				prev_barrier = std::numeric_limits<float>::lowest();
+			std::shared_ptr< Node>
+				prev_node,
+				prev_tmp_node;
+			bool
+				first_time = true;
+
 			for( auto edge = node->GetParentEdges().begin(); edge != node->GetParentEdges().end(); ++edge)
 			{
-				local_barrier = edge->GetNode().GetBarrier();
-				if( )
+				prev_node = edge->GetNode();
+				prev_barrier = prev_node.GetBarrier();
+				current_area = 0.5 * ( prev_node->GetEnergy() + node->GetEnergy() ) * edge->GetDistance();
+
+				if( prev_barrier > node->GetEnergy() )
+				{
+					if( prev_barrier < barrier)
+					{
+						barrier = prev_barrier;
+						best_area = current_area;
+						node->SetBest( prev_node);
+					}
+					else if( prev_barrier == barrier && current_area < best_area)
+					{
+						best_area = current_area;
+						node->SetBest( prev_node);
+					}
+				}
+				else
+				{
+					if( first_time)
+					{
+						best_area =  std::numeric_limits<float>::max();
+						first_time = false;
+					}
+					if( current_area < best_area)
+					{
+						best_area = current_area;
+						node->SetBest( prev_node);
+					}
+				}
+
+
 			}
 			// barrier
-			node->SetBarrier( std::max( ))
+			node->SetBarrier( std::max( node->GetEnergy(), barrier ));
+			node->SetSum( prev_sum + node->GetEnergy() * rmsd);
 			// sum
 		}
 }
