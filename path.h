@@ -454,7 +454,7 @@ Backtrace( const std::shared_ptr<Node> &NODE, std::vector< std::shared_ptr<Node>
 	std::cout << __FUNCTION__ << " " << PATH.size() << std::endl;
 	if( NODE->GetBest().GetNode() != FIRST)
 	{
-		Backtrace( NODE->GetBest().GetNode(), PATH);
+		Backtrace( NODE->GetBest().GetNode(), PATH, FIRST);
 	}
 }
 
