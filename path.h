@@ -448,11 +448,11 @@ void Write
 
 
 void
-Backtrace( const std::shared_ptr<Node> &NODE, std::vector< std::shared_ptr<Node> >  &PATH)
+Backtrace( const std::shared_ptr<Node> &NODE, std::vector< std::shared_ptr<Node> >  &PATH, const std::shared_ptr<Node> &FIRST)
 {
 	PATH.push_back( NODE);
 	std::cout << __FUNCTION__ << " " << PATH.size() << std::endl;
-	if( NODE->GetBest().GetNode())
+	if( NODE->GetBest().GetNode() != FIRST)
 	{
 		Backtrace( NODE->GetBest().GetNode(), PATH);
 	}

@@ -371,7 +371,7 @@ int main(  int ARGC, char ** ARGV)
 
 //	Shift( last_node, -zero_energy);  // UNCOMMENT THIS AFTER TEST ROUND !!!!
 
-	Backtrace( last_node, final_path);
+	Backtrace( last_node, final_path, first_node);
 
 	now2 = clock();
 	std::cout << "TIMER: backtrace: " << float( now2 - now) / CLOCKS_PER_SEC << std::endl;
