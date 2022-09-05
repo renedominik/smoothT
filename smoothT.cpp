@@ -312,13 +312,18 @@ int main(  int ARGC, char ** ARGV)
 	std::vector< std::vector< std::shared_ptr< Node > > >
 		generations;
 
-	Shift( last_node, zero_energy);
 
 	////////////////////////////////////////////////////////
 	////////////////      BUILD GRAPH    ///////////////////
 	// network/graph building loop
 	while( Iterate( current, all, max_dist, last_node, generations) ){}
 	////////////////////////////////////////////////////////
+
+//	for( auto a : all)
+//	{
+//		Shift( a, zero_energy);
+//	}
+	Shift( last_node, zero_energy);
 
 	clock_t now2 = clock();
 	std::cout << "TIMER: graph construction: " << float( now2 - now) / CLOCKS_PER_SEC << std::endl;
@@ -333,39 +338,60 @@ int main(  int ARGC, char ** ARGV)
 //		score_sorted_paths;
 //	std::map< float, std::multimap< float, std::vector<int> > >
 //		score_sorted_paths;
-
-
-	for( std::vector< std::vector< std::shared_ptr< Node > > >::const_iterator itr = generations.begin(); itr != generations.end(); ++itr)
-		for( std::vector< std::shared_ptr< Node > >::const_iterator jtr = itr->begin(); jtr != itr->end(); ++jtr)
-			if( *jtr == last_node)
-			{
-				std::cout << "CHECK: last node found" << std::endl;
-			}
-
-
-	std::vector<int>
-		path;
-	node = last_node;
-
-	GenerationWalk( generations);
-
-	std::vector< std::shared_ptr< Node> >
-		final_path;
-
-	Backtrace( last_node, final_path);
-
+	//	std::vector<int>
+	//		path;
+	//	node = last_node;
 	/////////////////////////////////////////////////////////////////////////////////////////
 	///////////////    EXTRACT PATHWAYS FROM GRAPH     //////////////////////////////////////
 //	Backtrace( score_sorted_paths, path, zero_energy, node, first_node, last_node, max_nr_barriers, max_nr_paths);
 	/////////////////////////////////////////////////////////////////////////////////////////
+
+
+	int cc = 0;
+	for( std::vector< std::vector< std::shared_ptr< Node > > >::const_iterator itr = generations.begin(); itr != generations.end(); ++itr, ++cc)
+		for( std::vector< std::shared_ptr< Node > >::const_iterator jtr = itr->begin(); jtr != itr->end(); ++jtr)
+			if( *jtr == last_node)
+			{
+				std::cout << "CHECK: last node found in generation " << cc <<  " / " << itr->size() << std::endl;
+			}
+			else if( *jtr == first_node)
+			{
+				std::cout << "CHECK: first node found in generation " << cc <<  " / " << itr->size() << std::endl;
+			}
+
+
+	GenerationWalk( generations);
+
 	now = clock();
-	std::cout << "TIMER: backtrace: " << float( now - now2) / CLOCKS_PER_SEC << std::endl;
+	std::cout << "TIMER: generation walk: " << float( now - now2) / CLOCKS_PER_SEC << std::endl;
+
+	std::vector< std::shared_ptr< Node> >
+		final_path;
+
+//	Shift( last_node, -zero_energy);  // UNCOMMENT THIS AFTER TEST ROUND !!!!
+
+	Backtrace( last_node, final_path);
+
+	now2 = clock();
+	std::cout << "TIMER: backtrace: " << float( now2 - now) / CLOCKS_PER_SEC << std::endl;
+
+	std::cout << "path length: " << final_path.size() << std::endl;
+
+	if( final_path[0] == first_node)
+	{
+		std::cout << "first node found in final path" << std::endl;
+	}
+	if( final_path.back() == last_node)
+	{
+		std::cout << "last node found in final path" << std::endl;
+	}
 
 	std::cout << "Best path: barrier: " << last_node->GetBarrier() << " integral: " << last_node->GetSum() << std::endl;
 
 	Write( final_path, 0.0, last_node->GetBarrier(), outdir);
-	now2 = clock();
-	std::cout << "TIMER: writing: " << float( now2 - now) / CLOCKS_PER_SEC << std::endl;
+//	Write( final_path, zero_energy, last_node->GetBarrier() + zero_energy, outdir); // UNCOMMENT THIS AFTER TEST ROUND !!!!
+	now = clock();
+	std::cout << "TIMER: writing: " << float( now - now2) / CLOCKS_PER_SEC << std::endl;
 
 
 	std::cout << "STATUS: finished" << std::endl;
