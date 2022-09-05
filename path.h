@@ -238,7 +238,6 @@ bool Iterate
     else if( REMAINING.size() == 1 && REMAINING[0] == LAST)
     {
     	std::cout << "last node remaining, iteration is terminated" << std::endl;
-        GENERATIONS.push_back( REMAINING);
         return false;
     }
 
@@ -261,7 +260,7 @@ bool Iterate
     // stop if LAST node is in LATEST
     if( std::find( LATEST.begin(), LATEST.end(), LAST) != LATEST.end())
     {
-        std::cout << "hooked up last node (first node), having " << LAST->GetParentEdges().size() << " parent edges" << std::endl;
+        std::cout << "hooked up last node, having " << LAST->GetParentEdges().size() << " parent edges" << std::endl;
 //        std::cout << REMAINING.size() << " remaining nodes (these nodes are not linked to graph)." << std::endl;
 	// return false;  //////    VERSION 1.0  === TODO: block and find better strategy! ////////////
     }
@@ -503,11 +502,11 @@ void Backtrace
 void Shift( std::shared_ptr< Node> & NODE, const float &SHIFT)
 {
 	NODE->SetEnergy( NODE->GetEnergy() - SHIFT);
-	for( auto itr = NODE->GetParentEdges().begin(); itr != NODE->GetParentEdges().end(); ++itr)
-	{
-		auto node = itr->GetNode();
-		Shift( node,  SHIFT);
-	}
+//	for( auto itr = NODE->GetParentEdges().begin(); itr != NODE->GetParentEdges().end(); ++itr)
+//	{
+//		auto node = itr->GetNode();
+//		Shift( node,  SHIFT);
+//	}
 }
 
 

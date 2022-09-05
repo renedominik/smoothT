@@ -313,6 +313,12 @@ int main(  int ARGC, char ** ARGV)
 		generations;
 
 
+	for( auto a : all)
+	{
+		Shift( a, zero_energy);
+	}
+	Shift( first_node, zero_energy);
+	std::cout << "shifted energies, first node: " << first_node->GetEnergy() << " last node: " << last_node->GetEnergy() << std::endl;
 	////////////////////////////////////////////////////////
 	////////////////      BUILD GRAPH    ///////////////////
 	// network/graph building loop
@@ -323,12 +329,6 @@ int main(  int ARGC, char ** ARGV)
 	std::cout << "STATUS: graph constructed" << std::endl;
 
 
-//	for( auto a : all)
-//	{
-//		Shift( a, zero_energy);
-//	}
-	Shift( last_node, zero_energy);
-	std::cout << "shifted energies, first node: " << first_node->GetEnergy() << " last node: " << last_node->GetEnergy() << std::endl;
 
 
 	//// score sorted paths  ===  POOL of pathways   ////
