@@ -230,10 +230,16 @@ bool Iterate
     std::cout << __FUNCTION__ << " " << count << ": unique nr connected " << connected.size() << " remaining: " << REMAINING.size() << std::endl;
 
     // stop if no nodes are in REMAINING
-    if( REMAINING.size() == 0 || (REMAINING.size() == 1 && REMAINING[0] == LAST))
+    if( REMAINING.size() == 0 )
     {
     	std::cout << "no remaining nodes, iteration is terminated" << std::endl;
     	return false;
+    }
+    else if( REMAINING.size() == 1 && REMAINING[0] == LAST)
+    {
+    	std::cout << "last node remaining, iteration is terminated" << std::endl;
+        GENERATIONS.push_back( REMAINING);
+        return false;
     }
 
 //    if( connected.size() == prev_nr_connected)

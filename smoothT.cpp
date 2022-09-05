@@ -318,16 +318,17 @@ int main(  int ARGC, char ** ARGV)
 	// network/graph building loop
 	while( Iterate( current, all, max_dist, last_node, generations) ){}
 	////////////////////////////////////////////////////////
+	clock_t now2 = clock();
+	std::cout << "TIMER: graph construction: " << float( now2 - now) / CLOCKS_PER_SEC << std::endl;
+	std::cout << "STATUS: graph constructed" << std::endl;
+
 
 //	for( auto a : all)
 //	{
 //		Shift( a, zero_energy);
 //	}
 	Shift( last_node, zero_energy);
-
-	clock_t now2 = clock();
-	std::cout << "TIMER: graph construction: " << float( now2 - now) / CLOCKS_PER_SEC << std::endl;
-	std::cout << "STATUS: graph constructed" << std::endl;
+	std::cout << "shifted energies, first node: " << first_node->GetEnergy() << " last node: " << last_node->GetEnergy() << std::endl;
 
 
 	//// score sorted paths  ===  POOL of pathways   ////
