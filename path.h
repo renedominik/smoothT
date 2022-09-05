@@ -59,7 +59,7 @@ private:
   std::vector< Edge> m_Parents;                   // list of edges to parent nodes
   float m_Sum;                                    // sum over energies along (sub)path  (initialized undefined in constructor as max float)
   float m_Barrier;                                // max over previous (sub)path
-  std::shared_ptr< Node>  m_Best;                 // best parent ever
+  Edge  m_Best;                  // best parent ever
 
 public:
   // constructor
@@ -103,6 +103,14 @@ public:
 	void
 	SetEnergy( const float &VALUE)
 	{ m_Energy = VALUE;}
+
+	const Edge &
+	GetBest() const
+	{ return m_Best;}
+
+	void
+	SetBest( const Edge &PTR)
+	{  m_Best = PTR;}
 
 	const float &
 	GetSum() const
@@ -389,6 +397,62 @@ void Write
 
 }
 
+
+
+void Write
+(
+		const std::vector< std::shared_ptr<Node> >  &PATH,
+		const float &MIN,
+		const float &MAX,
+		const std::string & OUTDIR
+)
+{
+
+	std::ofstream
+		out1( OUTDIR + "/energies.txt"),
+		out2( OUTDIR + "/path.pdb");
+
+
+	float
+		rmsd,
+		min_energy,
+		max_energy;
+
+	// pdb with all models for visualization
+	for( unsigned int i = 0; i < PATH.size(); ++i)
+	{
+		if( i == 0){
+			rmsd = 0.0;
+		}else{
+			rmsd += PATH[i]->GetBest().GetDistance();
+		}
+		out1 << rmsd << "\t" << PATH[i]->GetEnergy() << std::endl;
+		out2 << "MODEL " << i + 1 << std::endl;
+		out2 << "HEADER" << std::endl;
+		out2 << PATH[i]->GetName() << "\t" << PATH[i]->GetEnergy() << std::endl;
+		WritePDB( out2, PATH[i]->GetName(), MIN, PATH[i]->GetEnergy(), MAX );
+		out2 << "ENDMDL" << std::endl;
+	}
+
+	out1.close(); out1.clear();
+	out2.close(); out2.clear();
+}
+
+
+
+
+
+void
+Backtrace( const std::shared_ptr<Node> &NODE, std::vector< std::shared_ptr<Node> >  &PATH)
+{
+	PATH.push_back( NODE);
+	if( NODE)
+	{
+		Backtrace( NODE->GetBest().GetNode(), PATH);
+	}
+}
+
+
 // PATH here is more a navigation instruction, which edge to follow in a specific node
 void Backtrace
 (
@@ -435,7 +499,8 @@ void Shift( std::shared_ptr< Node> & NODE, const float &SHIFT)
 	NODE->SetEnergy( NODE->GetEnergy() - SHIFT);
 	for( auto itr = NODE->GetParentEdges().begin(); itr != NODE->GetParentEdges().end(); ++itr)
 	{
-		Shift( itr->GetNode(), SHIFT);
+		auto node = itr->GetNode();
+		Shift( node,  SHIFT);
 	}
 }
 
@@ -447,42 +512,43 @@ void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > >
 		{
 			float
 				prev_sum,
-				prev_barrier = std::numeric_limits<float>::max(),
+				prev_barrier,
 				best_tmp_area = std::numeric_limits<float>::max(),
 				best_area = std::numeric_limits<float>::max(),
 				sum = 0.0,
 				prev_area,
 				current_area,
-				barrier = std::numeric_limits<float>::max(),
-				node_area = node->GetEnergy() * edge->GetDistance(),
-				prev_barrier = std::numeric_limits<float>::lowest();
+				barrier = std::numeric_limits<float>::max();
 			std::shared_ptr< Node>
 				prev_node,
 				prev_tmp_node;
 			bool
 				first_time = true;
 
-			for( auto edge = node->GetParentEdges().begin(); edge != node->GetParentEdges().end(); ++edge)
+			for( auto edge = (*node)->GetParentEdges().begin(); edge != (*node)->GetParentEdges().end(); ++edge)
 			{
 				prev_node = edge->GetNode();
-				prev_barrier = prev_node.GetBarrier();
-				current_area = 0.5 * ( prev_node->GetEnergy() + node->GetEnergy() ) * edge->GetDistance();
+				prev_barrier = prev_node->GetBarrier();
+				prev_sum = prev_node->GetSum();
+				current_area = 0.5 * ( prev_node->GetEnergy() + (*node)->GetEnergy() ) * edge->GetDistance();
 
-				if( prev_barrier > node->GetEnergy() )
+				if( barrier > (*node)->GetEnergy() )
 				{
 					if( prev_barrier < barrier)
 					{
 						barrier = prev_barrier;
 						best_area = current_area;
-						node->SetBest( prev_node);
+//						best_prev_sum = prev_sum;
+						(*node)->SetBest( *edge);
 					}
 					else if( prev_barrier == barrier && current_area < best_area)
 					{
 						best_area = current_area;
-						node->SetBest( prev_node);
+//						best_prev_sum = prev_sum;
+						(*node)->SetBest( *edge);
 					}
 				}
-				else
+				else if( prev_barrier <= (*node)->GetEnergy() )
 				{
 					if( first_time)
 					{
@@ -492,15 +558,25 @@ void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > >
 					if( current_area < best_area)
 					{
 						best_area = current_area;
-						node->SetBest( prev_node);
+						barrier = prev_barrier;
+//						best_prev_sum = prev_sum;
+						(*node)->SetBest( *edge);
 					}
 				}
 
 
 			}
 			// barrier
-			node->SetBarrier( std::max( node->GetEnergy(), barrier ));
-			node->SetSum( prev_sum + node->GetEnergy() * rmsd);
+			if( (*node)->GetBest().GetNode())
+			{
+				(*node)->SetBarrier( std::max( (*node)->GetEnergy(), barrier ));
+				(*node)->SetSum( (*node)->GetBest().GetNode()->GetSum() + best_area);
+			}
+			else
+			{
+				std::cerr << "ERROR: Generation Walk did not find a path" << std::endl;
+				return;
+			}
 			// sum
 		}
 }

@@ -26,7 +26,7 @@
 #include "path.h"  // node and edges
 
 
-// g++ -O3 smoothT.cpp -o smoothT
+// g++ -O3 smoothT.cpp -o smoothT  -std=c++11
 
 
 struct SortPair
@@ -44,15 +44,14 @@ struct SortPair
 
 
 void
-Help()
+Options()
 {
-	std::cout << "\t\t=====================================" << std::endl;
-	std::cout << "\t\t=====================================" << std::endl;
-	std::cout << "\t\t===========    smoothT    ===========" << std::endl;
-	std::cout << "\t\t=====================================" << std::endl;
-	std::cout << "\t\t=====================================\n\n" << std::endl;
+	std::cout << "\t\t\t=====================================" << std::endl;
+	std::cout << "\t\t\t=====================================" << std::endl;
+	std::cout << "\t\t\t===========    SmoothT    ===========" << std::endl;
+	std::cout << "\t\t\t=====================================" << std::endl;
+	std::cout << "\t\t\t=====================================\n\n" << std::endl;
 	std::cout << "smoothT allows for the determination of low energy pathways from an ensemble of PDB models/poses.";
-	std::cout << "The ensemble can be created either by means of Monte-Carlo algorithms or Molecular dynamics simulations.\n";
 	std::cout << "The ensemble has to be sampled densely enough to have sufficient neighbors within the desired RMSD cutoff (specified by '-d' flag).\n\n\n";
 
 
@@ -77,7 +76,12 @@ Help()
 			"\t-k NR of barriers :: first sorting criterium (default: 5)\n"
 			"\t-z NR of pathways per barrier :: second sorting criterium (default: 20000)\n"
 			"\t-f FILENAME of alignment\n\n" << std::endl;
+}
 
+
+void
+Details()
+{
 
 	std::cout << "######     DETAILS     ######\n";
 	std::cout << "The user has to provide a list of all PDB files to consider for pathway construction: specified by '-l' flag\n";
@@ -121,14 +125,20 @@ Help()
 	std::cout << "\n";
 	std::cout << "SUCCESSFUL MODELING !!!\n";
 	std::cout << "\n";
-
-
 }
+
+
+void Help()
+{
+	Options();
+	Details();
+}
+
 
 void Author()
 {
-	std::cout << "Author: Rene Staritzbichler, rene@staritzbichler.com, http://proteinformatics.org , 10.10.2019\n" << std::endl;
-	std::cout << "please cite: \nStaritzbichler R, N. Ristic, Hildebrand P, 2022, \n\"smoothT\"\n\n\n" << std::endl;
+	std::cout << "Author: \nRené Staritzbichler, rene@staritzbichler.com, http://proteinformatics.org , 10.10.2019\n" << std::endl;
+	std::cout << "Please cite: \nRené Staritzbichler, Nikola Ristic, Peter W. Hildebrand, 2022, \n\"SmoothT – a server constructing basic transition pathways from conformational ensembles for interactive visualization and enhanced sampling\"\n\n\n" << std::endl;
 }
 
 
@@ -144,7 +154,7 @@ int main(  int ARGC, char ** ARGV)
 	Author();
 	if( ARGC == 1)
 	{
-		Help();
+		Options();
 		return 0;
 	}
 
@@ -321,8 +331,16 @@ int main(  int ARGC, char ** ARGV)
 	// vector<int>: ids of nodes constituting a pathway
 //	std::multimap< std::pair< float, float>, std::vector<int> , SortPair >
 //		score_sorted_paths;
-	std::map< float, std::multimap< float, std::vector<int> > >
-		score_sorted_paths;
+//	std::map< float, std::multimap< float, std::vector<int> > >
+//		score_sorted_paths;
+
+
+	for( std::vector< std::vector< std::shared_ptr< Node > > >::const_iterator itr = generations.begin(); itr != generations.end(); ++itr)
+		for( std::vector< std::shared_ptr< Node > >::const_iterator jtr = itr->begin(); jtr != itr->end(); ++jtr)
+			if( *jtr == last_node)
+			{
+				std::cout << "CHECK: last node found" << std::endl;
+			}
 
 
 	std::vector<int>
@@ -331,7 +349,10 @@ int main(  int ARGC, char ** ARGV)
 
 	GenerationWalk( generations);
 
-	Backtrace( last_node);
+	std::vector< std::shared_ptr< Node> >
+		final_path;
+
+	Backtrace( last_node, final_path);
 
 	/////////////////////////////////////////////////////////////////////////////////////////
 	///////////////    EXTRACT PATHWAYS FROM GRAPH     //////////////////////////////////////
@@ -340,8 +361,9 @@ int main(  int ARGC, char ** ARGV)
 	now = clock();
 	std::cout << "TIMER: backtrace: " << float( now - now2) / CLOCKS_PER_SEC << std::endl;
 
+	std::cout << "Best path: barrier: " << last_node->GetBarrier() << " integral: " << last_node->GetSum() << std::endl;
 
-	Write( score_sorted_paths, last_node, outdir);
+	Write( final_path, 0.0, last_node->GetBarrier(), outdir);
 	now2 = clock();
 	std::cout << "TIMER: writing: " << float( now2 - now) / CLOCKS_PER_SEC << std::endl;
 
