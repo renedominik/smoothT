@@ -273,15 +273,17 @@ bool Iterate
     //std::cout << "end destruction" << std::endl;
     LATEST = std::vector<std::shared_ptr< Node >  >( connected.begin(), connected.end());
 
-    GENERATIONS.push_back( LATEST);
-
     // stop if LAST node is in LATEST
     if( std::find( LATEST.begin(), LATEST.end(), LAST) != LATEST.end())
     {
         std::cout << "hooked up last node, having " << LAST->GetParentEdges().size() << " parent edges" << std::endl;
-//        std::cout << REMAINING.size() << " remaining nodes (these nodes are not linked to graph)." << std::endl;
-	// return false;  //////    VERSION 1.0  === TODO: block and find better strategy! ////////////
+        std::cout << "erase last, prior size: " << LATEST.size() << " ";
+        LATEST.erase( std::remove( LATEST.begin(), LATEST.end(), LAST), LATEST.end());
+        std::cout << "post: " << LATEST.size() << std::endl;
     }
+
+    GENERATIONS.push_back( LATEST);
+
 
     // continue
     return true;
