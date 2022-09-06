@@ -24,7 +24,7 @@ private:
 public:
 	// default constructur
 	Edge()
-	: m_Node(), m_Dist(){}
+	: m_Node(), m_Dist(-1.0){}
 
 	// construct from member
 	Edge( const std::shared_ptr<Node> &NODE, const float & DIST)
@@ -448,13 +448,13 @@ void Write
 
 
 void
-Backtrace( const std::shared_ptr<Node> &NODE, std::vector< std::shared_ptr<Node> >  &PATH, const std::shared_ptr<Node> &FIRST)
+Backtrace( const std::shared_ptr<Node> &NODE, std::vector< std::shared_ptr<Node> >  &PATH)
 {
 	PATH.push_back( NODE);
 	std::cout << __FUNCTION__ << " " << PATH.size() << std::endl;
-	if( NODE->GetBest().GetNode().use_count() > 0)
+	if( NODE->GetBest().GetDistance() >= 0)
 	{
-		Backtrace( NODE->GetBest().GetNode(), PATH, FIRST);
+		Backtrace( NODE->GetBest().GetNode(), PATH);
 	}
 }
 
