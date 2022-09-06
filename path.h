@@ -553,7 +553,7 @@ void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > >
 			       
 				if( (*node)->GetName() == prev_node->GetName() )
 				{
-					std::cout << "WARNING: identical nodes: "  << (*node)->GetName() << std::endl;
+					std::cout << "warning: identical nodes: "  << (*node)->GetName() << " nr parents: " << (*node)->GetParentEdges().size() << " generation: " << cc << std::endl;
 					continue;
 				}
 				prev_barrier = prev_node->GetBarrier();
@@ -601,11 +601,11 @@ void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > >
 				(*node)->SetBarrier( std::max( (*node)->GetEnergy(), barrier ));
 				(*node)->SetSum( (*node)->GetBest().GetNode()->GetSum() + best_area);
 			}
-			else
-			{
-				std::cerr << "ERROR: Generation Walk did not find a path. nr parents: " << (*node)->GetParentEdges().size() << " generation: " << cc << " name: " << (*node)->GetName() << std::endl;
-//				return;
-			}
+//			else // expected to for first node
+//			{
+//				std::cerr << "ERROR: Generation Walk did not find a path. nr parents: " << (*node)->GetParentEdges().size() << " generation: " << cc << " name: " << (*node)->GetName() << std::endl;
+////				return;
+//			}
 			// sum
 		}
 }
