@@ -136,8 +136,11 @@ public:
 		OUT << "energy: "<< m_Energy << std::endl;
 		OUT << "nr positions: " << m_Pos.size() << std::endl;
 		OUT << "nr edges: " << m_Parents.size() << std::endl;
-		OUT << m_Pos[0][0] << "\t" << m_Pos[0][1] << "\t" << m_Pos[0][2] << std::endl;
-		OUT << m_Pos.back()[0] << "\t" << m_Pos.back()[1] << "\t" << m_Pos.back()[2] << std::endl;
+		//		OUT << m_Pos[0][0] << "\t" << m_Pos[0][1] << "\t" << m_Pos[0][2] << std::endl;
+		//		OUT << m_Pos.back()[0] << "\t" << m_Pos.back()[1] << "\t" << m_Pos.back()[2] << std::endl;
+		OUT << "barrier: " << m_Barrier << std::endl;
+		OUT << "sum: " << m_Sum << std::endl;
+		OUT << "best edge distance: " << m_Best.GetNode().GetDistance() << std::endl;
 		return OUT;
 	}
 };
@@ -451,7 +454,8 @@ void
 Backtrace( const std::shared_ptr<Node> &NODE, std::vector< std::shared_ptr<Node> >  &PATH)
 {
 	PATH.push_back( NODE);
-	std::cout << __FUNCTION__ << " " << PATH.size() << std::endl;
+	std::cout << __FUNCTION__ << " " << PATH.size() << "  " << NODE << std::endl;
+	exit(1);
 	if( NODE->GetBest().GetDistance() >= 0)
 	{
 		Backtrace( NODE->GetBest().GetNode(), PATH);
@@ -534,6 +538,7 @@ void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > >
 			for( auto edge = (*node)->GetParentEdges().begin(); edge != (*node)->GetParentEdges().end(); ++edge)
 			{
 				prev_node = edge->GetNode();
+			       
 				prev_barrier = prev_node->GetBarrier();
 				prev_sum = prev_node->GetSum();
 				current_area = 0.5 * ( prev_node->GetEnergy() + (*node)->GetEnergy() ) * edge->GetDistance();
