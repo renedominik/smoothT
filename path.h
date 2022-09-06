@@ -195,7 +195,12 @@ bool Iterate
     		if( *rtr == *ltr && *rtr != LAST )
     		{
     			std::cout << __FUNCTION__ << ": WARNING: nodes are equal!" << std::endl;
-    			break;
+    			break;  // why break??
+    		}
+    		if( *rtr == *ltr)
+    		{
+    			std::cout << __FUNCTION__ << ": WARNING: nodes are equal!" << std::endl;
+    			continue;
     		}
 
     		distance = RMSD( (*rtr)->GetPos(), (*ltr)->GetPos() );
@@ -549,6 +554,10 @@ void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > >
 			{
 				prev_node = edge->GetNode();
 			       
+				if( (*node)->GetName() == prev_node->GetName() )
+				{
+					continue;
+				}
 				prev_barrier = prev_node->GetBarrier();
 				prev_sum = prev_node->GetSum();
 

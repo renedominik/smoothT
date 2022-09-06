@@ -348,7 +348,7 @@ int main(  int ARGC, char ** ARGV)
 			for( std::vector< Edge>::const_iterator etr = (*jtr)->GetParentEdges().begin(); etr != (*jtr)->GetParentEdges().end(); ++etr)
 				if( etr->GetNode() == first_node)
 				{
-					std::cout << "CHECK: first node found as parent in generation " << cc <<  " / " << generations.size() << std::endl;
+					std::cout << "CHECK: first node found as parent in generation " << cc <<  " / " << generations.size() << " " << (*jtr)->GetParentEdges().size() <<  std::endl;
 				}
 		}
 
