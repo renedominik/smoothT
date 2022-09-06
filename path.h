@@ -24,7 +24,7 @@ private:
 public:
 	// default constructur
 	Edge()
-	: m_Node(), m_Dist(-1.0){}
+	: m_Node( nullptr), m_Dist(-1.0){}
 
 	// construct from member
 	Edge( const std::shared_ptr<Node> &NODE, const float & DIST)
@@ -147,6 +147,10 @@ public:
 		OUT << "barrier: " << m_Barrier << std::endl;
 		OUT << "sum: " << m_Sum << std::endl;
 		OUT << "best edge distance: " << m_Best.GetDistance() << std::endl;
+		if( m_Best.GetDistance() > 0)
+		{
+			OUT << "best node name: " << m_Best.GetNode()->GetName() << std::endl;
+		}
 		return OUT;
 	}
 };
@@ -201,7 +205,7 @@ bool Iterate
     		}
     		if( *rtr == *ltr)
     		{
-    			std::cout << __FUNCTION__ << ": WARNING: nodes are equal!" << std::endl;
+    			std::cout << __FUNCTION__ << ": WARNING: nodes are equal! " << (*rtr)->GetName() << std::endl;
     			continue;
     		}
 
@@ -466,9 +470,10 @@ Backtrace( const std::shared_ptr<Node> &NODE, std::vector< std::shared_ptr<Node>
 {
 	PATH.push_back( NODE);
 	std::cout << __FUNCTION__ << " " << PATH.size() << "  " << *NODE << std::endl;
-	if( NODE->GetBest().GetDistance() >= 0)
+	auto n = NODE->GetBest().GetNode();
+	if( n != nullptr && n->GetName() != NODE->GetName())
 	{
-		Backtrace( NODE->GetBest().GetNode(), PATH);
+		Backtrace( n, PATH);
 	}
 }
 
@@ -530,7 +535,9 @@ void FixGenerations( std::vector< std::vector< std::shared_ptr< Node > > > &GENE
 {
 	for( auto gen = GENERATIONS.begin(); gen != GENERATIONS.end(); ++gen)
 	{
+		std::cout << __FUNCTION__ << " prior: " << gen->size() << " ";
 		gen->erase( std::remove( gen->begin(), gen->end(), LAST), gen->end());
+		std::cout << " post: " << gen->size() << std::endl;
 	}
 	GENERATIONS.push_back( std::vector< std::shared_ptr< Node > >( 1, LAST));
 }
