@@ -3,7 +3,7 @@ Inputs:
 - a list of pdb files
 - a starting conformation (PDB)
 - a final conformation (PDB)
-- an energy identifier (each PDB file contains a line with this identifier-string followd by the energy value - space separated)
+- an energy identifier (each PDB file contains a line with this identifier-string with the according energy value at the end of the line - space separated)
 - a RMSD cutoff, defining conformation to be neighbors for graph construction
 
 
@@ -25,3 +25,7 @@ ADVANCED FEATURES:
 
 - select atoms used for RMSD calculation by chains and types 
 - smoothT can use either a list of identical molecules, or one can provide alignments to define atom positions to be used
+
+
+TODOs: 
+- switch energies/barriers/sums of first & last node off? (same for all paths)

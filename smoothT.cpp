@@ -297,7 +297,7 @@ int main(  int ARGC, char ** ARGV)
 	current.push_back( first_node);
 
 //// TODO CHECK !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//	//////  switch first node 'off'  /////////////////////////////
+//	//////  switch first (and last??) node 'off'  /////////////////////////////
 //	float
 //		initial_first_energy = first_node->GetEnergy();
 //	current[0]->SetEnergy( 0.0);
@@ -313,12 +313,19 @@ int main(  int ARGC, char ** ARGV)
 		generations;
 
 
+	std::cout << "unshifted energies, first node: " << first_node->GetEnergy() << " last node: " << last_node->GetEnergy() << std::endl;
+	std::cout << "unshifted barriers, first node: " << first_node->GetBarrier() << " last node: " << last_node->GetBarrier() << std::endl;
+	std::cout << "unshifted integrals, first node: " << first_node->GetSum() << " last node: " << last_node->GetSum() << std::endl;
+
 	for( auto a : all)
 	{
-		Shift( a, zero_energy);
+		Shift( a, zero_energy);  //  TODO: shift sum, barrier in nodes??
 	}
 	Shift( first_node, zero_energy);
+
 	std::cout << "shifted energies, first node: " << first_node->GetEnergy() << " last node: " << last_node->GetEnergy() << std::endl;
+	std::cout << "shifted barriers, first node: " << first_node->GetBarrier() << " last node: " << last_node->GetBarrier() << std::endl;
+	std::cout << "shifted integrals, first node: " << first_node->GetSum() << " last node: " << last_node->GetSum() << std::endl;
 	////////////////////////////////////////////////////////
 	////////////////      BUILD GRAPH    ///////////////////
 	// network/graph building loop
@@ -328,37 +335,22 @@ int main(  int ARGC, char ** ARGV)
 	std::cout << "TIMER: graph construction: " << float( now2 - now) / CLOCKS_PER_SEC << std::endl;
 	std::cout << "STATUS: graph constructed" << std::endl;
 
-
-
-
-	//// score sorted paths  ===  POOL of pathways   ////
-	// multimap: dictionary with multiple identical keys
-	// float: energy barrier
-	// vector<int>: ids of nodes constituting a pathway
-//	std::multimap< std::pair< float, float>, std::vector<int> , SortPair >
-//		score_sorted_paths;
-//	std::map< float, std::multimap< float, std::vector<int> > >
-//		score_sorted_paths;
-	//	std::vector<int>
-	//		path;
-	//	node = last_node;
-	/////////////////////////////////////////////////////////////////////////////////////////
-	///////////////    EXTRACT PATHWAYS FROM GRAPH     //////////////////////////////////////
-//	Backtrace( score_sorted_paths, path, zero_energy, node, first_node, last_node, max_nr_barriers, max_nr_paths);
-	/////////////////////////////////////////////////////////////////////////////////////////
-
+	FixGenerations( generations, last_node);
 
 	int cc = 0;
 	for( std::vector< std::vector< std::shared_ptr< Node > > >::const_iterator itr = generations.begin(); itr != generations.end(); ++itr, ++cc)
 		for( std::vector< std::shared_ptr< Node > >::const_iterator jtr = itr->begin(); jtr != itr->end(); ++jtr)
+		{
 			if( *jtr == last_node)
 			{
-				std::cout << "CHECK: last node found in generation " << cc <<  " / " << itr->size() << std::endl;
+				std::cout << "CHECK: last node found in generation " << cc <<  " / " << generations.size() << std::endl;
 			}
-			else if( *jtr == first_node)
-			{
-				std::cout << "CHECK: first node found in generation " << cc <<  " / " << itr->size() << std::endl;
-			}
+			for( std::vector< Edge>::const_iterator etr = (*jtr)->GetParentEdges().begin(); etr != (*jtr)->GetParentEdges().end(); ++etr)
+				if( etr->GetNode() == first_node)
+				{
+					std::cout << "CHECK: first node found as parent in generation " << cc <<  " / " << generations.size() << std::endl;
+				}
+		}
 
 	std::cout << "\nBEFORE GENERATIONWALK:\nfirst node: " << *first_node << " \n\nlast node: " << *last_node << std::endl;
 

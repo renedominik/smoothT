@@ -64,13 +64,14 @@ private:
 public:
   // constructor
 	Node( const std::string &NAME, const std::string &ENERGY_IDENTIFIER, const std::vector< std::string> &ATOM_TYPES, const std::vector<char> &CHAINS,  const std::map<char,std::string> &ALIGNMENT)
-    : m_Name( NAME), m_Energy(), m_Pos(), m_Parents(), m_Sum( std::numeric_limits<float>::max()), m_Barrier(), m_Best()
+    : m_Name( NAME), m_Energy(), m_Pos(), m_Parents(), m_Sum(0), m_Barrier(0), m_Best()
 	{
 		//std::cout << __FUNCTION__ << " construct from: <" << NAME << "> <" << ENERGY_IDENTIFIER << ">" << std::endl;
 		auto all = ReadPDBPositionsAndEnergy( NAME, ENERGY_IDENTIFIER, ATOM_TYPES, CHAINS, ALIGNMENT);
 		m_Energy = all.first;
 		m_Pos = all.second;
 		m_Barrier = m_Energy;
+		m_Sum = m_Energy;
 	}
 
 	~Node(){} // std::cout << __FUNCTION__ << std::endl;}
@@ -458,7 +459,6 @@ Backtrace( const std::shared_ptr<Node> &NODE, std::vector< std::shared_ptr<Node>
 {
 	PATH.push_back( NODE);
 	std::cout << __FUNCTION__ << " " << PATH.size() << "  " << *NODE << std::endl;
-	exit(1);
 	if( NODE->GetBest().GetDistance() >= 0)
 	{
 		Backtrace( NODE->GetBest().GetNode(), PATH);
@@ -510,11 +510,22 @@ void Backtrace
 void Shift( std::shared_ptr< Node> & NODE, const float &SHIFT)
 {
 	NODE->SetEnergy( NODE->GetEnergy() - SHIFT);
+	NODE->SetBarrier( NODE->GetBarrier() - SHIFT);
+	NODE->SetSum( NODE->GetSum() - SHIFT);
 //	for( auto itr = NODE->GetParentEdges().begin(); itr != NODE->GetParentEdges().end(); ++itr)
 //	{
 //		auto node = itr->GetNode();
 //		Shift( node,  SHIFT);
 //	}
+}
+
+void FixGenerations( std::vector< std::vector< std::shared_ptr< Node > > > &GENERATIONS, const std::shared_ptr< Node > &LAST)
+{
+	for( auto gen = GENERATIONS.begin(); gen != GENERATIONS.end(); ++gen)
+	{
+		gen->erase( std::remove( gen->begin(), gen->end(), LAST), gen->end());
+	}
+	GENERATIONS.push_back( std::vector< std::shared_ptr< Node > >( 1, LAST));
 }
 
 
@@ -526,15 +537,11 @@ void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > >
 			float
 				prev_sum,
 				prev_barrier,
-				best_tmp_area = std::numeric_limits<float>::max(),
 				best_area = std::numeric_limits<float>::max(),
-				sum = 0.0,
-				prev_area,
 				current_area,
 				barrier = std::numeric_limits<float>::max();
 			std::shared_ptr< Node>
-				prev_node,
-				prev_tmp_node;
+				prev_node;
 			bool
 				first_time = true;
 
@@ -544,6 +551,7 @@ void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > >
 			       
 				prev_barrier = prev_node->GetBarrier();
 				prev_sum = prev_node->GetSum();
+
 				current_area = 0.5 * ( prev_node->GetEnergy() + (*node)->GetEnergy() ) * edge->GetDistance();
 
 				if( barrier > (*node)->GetEnergy() )
@@ -581,14 +589,14 @@ void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > >
 
 			}
 			// barrier
-			if( (*node)->GetBest().GetNode())
+			if( barrier != std::numeric_limits<float>::max())
 			{
 				(*node)->SetBarrier( std::max( (*node)->GetEnergy(), barrier ));
 				(*node)->SetSum( (*node)->GetBest().GetNode()->GetSum() + best_area);
 			}
 			else
 			{
-				std::cerr << "ERROR: Generation Walk did not find a path" << std::endl;
+				std::cerr << "ERROR: Generation Walk did not find a path (nr parents: " << (*node)->GetParentEdges().size() << ")"<< std::endl;
 				return;
 			}
 			// sum
