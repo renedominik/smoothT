@@ -140,8 +140,10 @@ public:
 		//		OUT << m_Pos[0][0] << "\t" << m_Pos[0][1] << "\t" << m_Pos[0][2] << std::endl;
 		//		OUT << m_Pos.back()[0] << "\t" << m_Pos.back()[1] << "\t" << m_Pos.back()[2] << std::endl;
 		OUT << "nr parents: " << m_Parents.size() << std::endl;
+		int cc = 0;
 		for( int i = 0; i < m_Parents.size() ; ++i)
-		  { OUT << "distance to parent: " << m_Parents[i].GetDistance() << std::endl;}
+		  { if( m_Parents[i].GetDistance() == 0.0){ ++cc;}}
+		OUT << "nr of zero distances to parent: " << cc << std::endl;
 		OUT << "barrier: " << m_Barrier << std::endl;
 		OUT << "sum: " << m_Sum << std::endl;
 		OUT << "best edge distance: " << m_Best.GetDistance() << std::endl;
@@ -536,7 +538,8 @@ void FixGenerations( std::vector< std::vector< std::shared_ptr< Node > > > &GENE
 
 void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > > &GENERATIONS)
 {
-	for( auto gen = GENERATIONS.begin(); gen != GENERATIONS.end(); ++gen)
+	int cc = 0;
+	for( auto gen = GENERATIONS.begin(); gen != GENERATIONS.end(); ++gen, ++cc)
 		for( auto node = gen->begin(); node != gen->end(); ++node)
 		{
 			float
@@ -556,6 +559,7 @@ void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > >
 			       
 				if( (*node)->GetName() == prev_node->GetName() )
 				{
+					std::cout << "WARNING: identical nodes: "  << (*node)->GetName() << std::endl;
 					continue;
 				}
 				prev_barrier = prev_node->GetBarrier();
@@ -605,8 +609,8 @@ void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > >
 			}
 			else
 			{
-				std::cerr << "ERROR: Generation Walk did not find a path (nr parents: " << (*node)->GetParentEdges().size() << ")"<< std::endl;
-				return;
+				std::cerr << "ERROR: Generation Walk did not find a path. nr parents: " << (*node)->GetParentEdges().size() << " generation: " << cc << " name: " << (*node)->GetName() << std::endl;
+//				return;
 			}
 			// sum
 		}
