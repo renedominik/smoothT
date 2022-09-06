@@ -313,9 +313,9 @@ int main(  int ARGC, char ** ARGV)
 		generations;
 
 
-	std::cout << "unshifted energies, first node: " << first_node->GetEnergy() << " last node: " << last_node->GetEnergy() << std::endl;
-	std::cout << "unshifted barriers, first node: " << first_node->GetBarrier() << " last node: " << last_node->GetBarrier() << std::endl;
-	std::cout << "unshifted integrals, first node: " << first_node->GetSum() << " last node: " << last_node->GetSum() << std::endl;
+//	std::cout << "unshifted energies, first node: " << first_node->GetEnergy() << " last node: " << last_node->GetEnergy() << std::endl;
+//	std::cout << "unshifted barriers, first node: " << first_node->GetBarrier() << " last node: " << last_node->GetBarrier() << std::endl;
+//	std::cout << "unshifted integrals, first node: " << first_node->GetSum() << " last node: " << last_node->GetSum() << std::endl;
 
 	for( auto a : all)
 	{
@@ -323,9 +323,9 @@ int main(  int ARGC, char ** ARGV)
 	}
 	Shift( first_node, zero_energy);
 
-	std::cout << "shifted energies, first node: " << first_node->GetEnergy() << " last node: " << last_node->GetEnergy() << std::endl;
-	std::cout << "shifted barriers, first node: " << first_node->GetBarrier() << " last node: " << last_node->GetBarrier() << std::endl;
-	std::cout << "shifted integrals, first node: " << first_node->GetSum() << " last node: " << last_node->GetSum() << std::endl;
+//	std::cout << "shifted energies, first node: " << first_node->GetEnergy() << " last node: " << last_node->GetEnergy() << std::endl;
+//	std::cout << "shifted barriers, first node: " << first_node->GetBarrier() << " last node: " << last_node->GetBarrier() << std::endl;
+//	std::cout << "shifted integrals, first node: " << first_node->GetSum() << " last node: " << last_node->GetSum() << std::endl;
 	////////////////////////////////////////////////////////
 	////////////////      BUILD GRAPH    ///////////////////
 	// network/graph building loop
@@ -335,28 +335,28 @@ int main(  int ARGC, char ** ARGV)
 	std::cout << "TIMER: graph construction: " << float( now2 - now) / CLOCKS_PER_SEC << std::endl;
 	std::cout << "STATUS: graph constructed" << std::endl;
 
-	FixGenerations( generations, last_node);
+	generations.push_back( std::vector< std::shared_ptr< Node > >( 1, last_node));
 
-	int cc = 0;
-	for( std::vector< std::vector< std::shared_ptr< Node > > >::const_iterator itr = generations.begin(); itr != generations.end(); ++itr, ++cc)
-		for( std::vector< std::shared_ptr< Node > >::const_iterator jtr = itr->begin(); jtr != itr->end(); ++jtr)
-		{
-			if( *jtr == last_node)
-			{
-				std::cout << "CHECK: last node found in generation " << cc <<  " / " << generations.size() << std::endl;
-			}
-			for( std::vector< Edge>::const_iterator etr = (*jtr)->GetParentEdges().begin(); etr != (*jtr)->GetParentEdges().end(); ++etr)
-				if( etr->GetNode() == first_node)
-				{
-					std::cout << "CHECK: first node found as parent in generation " << cc <<  " / " << generations.size() << " " << (*jtr)->GetParentEdges().size() <<  std::endl;
-				}
-		}
+//	int cc = 0;
+//	for( std::vector< std::vector< std::shared_ptr< Node > > >::const_iterator itr = generations.begin(); itr != generations.end(); ++itr, ++cc)
+//		for( std::vector< std::shared_ptr< Node > >::const_iterator jtr = itr->begin(); jtr != itr->end(); ++jtr)
+//		{
+//			if( *jtr == last_node)
+//			{
+//				std::cout << "CHECK: last node found in generation " << cc <<  " / " << generations.size() << std::endl;
+//			}
+//			for( std::vector< Edge>::const_iterator etr = (*jtr)->GetParentEdges().begin(); etr != (*jtr)->GetParentEdges().end(); ++etr)
+//				if( etr->GetNode() == first_node)
+//				{
+//					std::cout << "CHECK: first node found as parent in generation " << cc <<  " / " << generations.size() << " " << (*jtr)->GetParentEdges().size() <<  std::endl;
+//				}
+//		}
 
-	std::cout << "\nBEFORE GENERATIONWALK:\nfirst node: " << *first_node << " \n\nlast node: " << *last_node << std::endl;
+//	std::cout << "\nBEFORE GENERATIONWALK:\nfirst node: " << *first_node << " \n\nlast node: " << *last_node << std::endl;
 
 	GenerationWalk( generations);
 
-	std::cout << "\nAFTER GENERATIONWALK: \nfirst node: " << *first_node << " \n\nlast node: " << *last_node << std::endl;
+//	std::cout << "\nAFTER GENERATIONWALK: \nfirst node: " << *first_node << " \n\nlast node: " << *last_node << std::endl;
 
 	now = clock();
 	std::cout << "TIMER: generation walk: " << float( now - now2) / CLOCKS_PER_SEC << std::endl;
@@ -388,7 +388,6 @@ int main(  int ARGC, char ** ARGV)
 //	Write( final_path, zero_energy, last_node->GetBarrier() + zero_energy, outdir); // UNCOMMENT THIS AFTER TEST ROUND !!!!
 	now = clock();
 	std::cout << "TIMER: writing: " << float( now - now2) / CLOCKS_PER_SEC << std::endl;
-
 
 	std::cout << "STATUS: finished" << std::endl;
 	return 0;

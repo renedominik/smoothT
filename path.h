@@ -64,14 +64,13 @@ private:
 public:
   // constructor
 	Node( const std::string &NAME, const std::string &ENERGY_IDENTIFIER, const std::vector< std::string> &ATOM_TYPES, const std::vector<char> &CHAINS,  const std::map<char,std::string> &ALIGNMENT)
-    : m_Name( NAME), m_Energy(), m_Pos(), m_Parents(), m_Sum(0), m_Barrier(0), m_Best()
+    : m_Name( NAME), m_Energy(), m_Pos(), m_Parents(), m_Sum(0.0), m_Barrier(0), m_Best()
 	{
 		//std::cout << __FUNCTION__ << " construct from: <" << NAME << "> <" << ENERGY_IDENTIFIER << ">" << std::endl;
 		auto all = ReadPDBPositionsAndEnergy( NAME, ENERGY_IDENTIFIER, ATOM_TYPES, CHAINS, ALIGNMENT);
 		m_Energy = all.first;
 		m_Pos = all.second;
 		m_Barrier = m_Energy;
-		m_Sum = m_Energy;
 	}
 
 	~Node(){} // std::cout << __FUNCTION__ << std::endl;}
@@ -194,15 +193,15 @@ bool Iterate
     int i = 0, j = 0;
     // find remaining that are connected to latest
     for( std::vector< std::shared_ptr< Node > >::const_iterator rtr = REMAINING.begin(); rtr != REMAINING.end(); ++rtr, ++i)
-      {
-	j = 0;
+    {
+    	j = 0;
     	for( std::vector< std::shared_ptr< Node > >::iterator ltr = LATEST.begin(); ltr != LATEST.end(); ++ltr, ++j)
         {
-    		if( *rtr == *ltr && *rtr != LAST )
-    		{
-    			std::cout << __FUNCTION__ << ": WARNING: nodes are equal!" << std::endl;
-    			break;  // why break??
-    		}
+//    		if( *rtr == *ltr && *rtr != LAST )
+//    		{
+//    			std::cout << __FUNCTION__ << ": WARNING: nodes are equal!" << std::endl;
+//    			break;  // why break??
+//    		}
     		if( *rtr == *ltr)
     		{
     			std::cout << __FUNCTION__ << ": WARNING: nodes are equal! " << (*rtr)->GetName() << std::endl;
@@ -259,14 +258,6 @@ bool Iterate
         return false;
     }
 
-//    if( connected.size() == prev_nr_connected)
-//    {
-//    	std::cout  << __FUNCTION__<< " no new connections found in this iteration, terminate" << std::endl;
-//    	return false;
-//    }
-//    prev_nr_connected = connected.size();
-
-
     // pass newly connected to latest for next iteration
     //std::cout << "node destructors:" << std::endl;
     LATEST.clear(); // probably egal
@@ -278,12 +269,11 @@ bool Iterate
     {
         std::cout << "hooked up last node, having " << LAST->GetParentEdges().size() << " parent edges" << std::endl;
         std::cout << "erase last, prior size: " << LATEST.size() << " ";
-        LATEST.erase( std::remove( LATEST.begin(), LATEST.end(), LAST), LATEST.end());
+        LATEST.erase( std::remove( LATEST.begin(), LATEST.end(), LAST), LATEST.end());   // crucial !
         std::cout << "post: " << LATEST.size() << std::endl;
     }
 
     GENERATIONS.push_back( LATEST);
-
 
     // continue
     return true;
@@ -471,7 +461,7 @@ void
 Backtrace( const std::shared_ptr<Node> &NODE, std::vector< std::shared_ptr<Node> >  &PATH)
 {
 	PATH.push_back( NODE);
-	std::cout << __FUNCTION__ << " " << PATH.size() << "  " << *NODE << std::endl;
+//	std::cout << __FUNCTION__ << " " << PATH.size() << "  " << *NODE << std::endl;
 	auto n = NODE->GetBest().GetNode();
 	if( n != nullptr && n->GetName() != NODE->GetName())
 	{
@@ -525,12 +515,7 @@ void Shift( std::shared_ptr< Node> & NODE, const float &SHIFT)
 {
 	NODE->SetEnergy( NODE->GetEnergy() - SHIFT);
 	NODE->SetBarrier( NODE->GetBarrier() - SHIFT);
-	NODE->SetSum( NODE->GetSum() - SHIFT);
-//	for( auto itr = NODE->GetParentEdges().begin(); itr != NODE->GetParentEdges().end(); ++itr)
-//	{
-//		auto node = itr->GetNode();
-//		Shift( node,  SHIFT);
-//	}
+//	NODE->SetSum( NODE->GetSum() - SHIFT);
 }
 
 void FixGenerations( std::vector< std::vector< std::shared_ptr< Node > > > &GENERATIONS, const std::shared_ptr< Node > &LAST)
