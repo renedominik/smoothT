@@ -360,8 +360,11 @@ int main(  int ARGC, char ** ARGV)
 				std::cout << "CHECK: first node found in generation " << cc <<  " / " << itr->size() << std::endl;
 			}
 
+	std::cout << "\nBEFORE GENERATIONWALK:\nfirst node: " << *first_node << " \n\nlast node: " << *last_node << std::endl;
 
 	GenerationWalk( generations);
+
+	std::cout << "\nAFTER GENERATIONWALK: \nfirst node: " << *first_node << " \n\nlast node: " << *last_node << std::endl;
 
 	now = clock();
 	std::cout << "TIMER: generation walk: " << float( now - now2) / CLOCKS_PER_SEC << std::endl;

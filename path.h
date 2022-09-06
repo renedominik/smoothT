@@ -138,9 +138,12 @@ public:
 		OUT << "nr edges: " << m_Parents.size() << std::endl;
 		//		OUT << m_Pos[0][0] << "\t" << m_Pos[0][1] << "\t" << m_Pos[0][2] << std::endl;
 		//		OUT << m_Pos.back()[0] << "\t" << m_Pos.back()[1] << "\t" << m_Pos.back()[2] << std::endl;
+		OUT << "nr parents: " << m_Parents.size() << std::endl;
+		for( int i = 0; i < m_Parents.size() ; ++i)
+		  { OUT << "distance to parent: " << m_Parents[i].GetDistance() << std::endl;}
 		OUT << "barrier: " << m_Barrier << std::endl;
 		OUT << "sum: " << m_Sum << std::endl;
-		OUT << "best edge distance: " << m_Best.GetNode().GetDistance() << std::endl;
+		OUT << "best edge distance: " << m_Best.GetDistance() << std::endl;
 		return OUT;
 	}
 };
@@ -454,7 +457,7 @@ void
 Backtrace( const std::shared_ptr<Node> &NODE, std::vector< std::shared_ptr<Node> >  &PATH)
 {
 	PATH.push_back( NODE);
-	std::cout << __FUNCTION__ << " " << PATH.size() << "  " << NODE << std::endl;
+	std::cout << __FUNCTION__ << " " << PATH.size() << "  " << *NODE << std::endl;
 	exit(1);
 	if( NODE->GetBest().GetDistance() >= 0)
 	{
