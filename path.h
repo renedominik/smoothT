@@ -268,9 +268,9 @@ bool Iterate
     if( std::find( LATEST.begin(), LATEST.end(), LAST) != LATEST.end())
     {
         std::cout << "hooked up last node, having " << LAST->GetParentEdges().size() << " parent edges" << std::endl;
-        std::cout << "erase last, prior size: " << LATEST.size() << " ";
+//        std::cout << "erase last, prior size: " << LATEST.size() << " ";
         LATEST.erase( std::remove( LATEST.begin(), LATEST.end(), LAST), LATEST.end());   // crucial !
-        std::cout << "post: " << LATEST.size() << std::endl;
+//        std::cout << "post: " << LATEST.size() << std::endl;
     }
 
     GENERATIONS.push_back( LATEST);
