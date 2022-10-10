@@ -375,10 +375,10 @@ int main(  int ARGC, char ** ARGV)
 
 	std::reverse( final_path.begin(), final_path.end());
 
-//	for( auto a : final_path)
-//	{
-//		Shift( a, -zero_energy);  //  TODO: shift sum, barrier in nodes??
-//	}
+	for( auto a : final_path)
+	{
+		Shift( a, -zero_energy);  //  TODO: shift sum, barrier in nodes??
+	}
 
 	if( final_path[0] == first_node)
 	{
