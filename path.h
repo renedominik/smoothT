@@ -429,23 +429,22 @@ void Write
 
 
 	float
-		rmsd,
+		rmsd = 0.0,
 		min_energy,
 		max_energy;
 
 	// pdb with all models for visualization
 	for( unsigned int i = 0; i < PATH.size(); ++i)
 	{
-		if( i == 0){
-			rmsd = 0.0;
-		}else{
-			rmsd += PATH[i]->GetBest().GetDistance();
+		int j = PATH.size() - i - 1;
+		if( i != 0){
+			rmsd += PATH[j]->GetBest().GetDistance();
 		}
-		out1 << rmsd << "\t" << PATH[i]->GetEnergy() << std::endl;
+		out1 << rmsd << "\t" << PATH[j]->GetEnergy() << std::endl;
 		out2 << "MODEL " << i + 1 << std::endl;
 		out2 << "HEADER" << std::endl;
-		out2 << PATH[i]->GetName() << "\t" << PATH[i]->GetEnergy() << std::endl;
-		WritePDB( out2, PATH[i]->GetName(), MIN, PATH[i]->GetEnergy(), MAX );
+		out2 << PATH[j]->GetName() << "\t" << PATH[j]->GetEnergy() << std::endl;
+		WritePDB( out2, PATH[j]->GetName(), MIN, PATH[j]->GetEnergy(), MAX );
 		out2 << "ENDMDL" << std::endl;
 	}
 
@@ -592,8 +591,6 @@ void GenerationWalk( const std::vector< std::vector< std::shared_ptr< Node > > >
 						(*node)->SetBest( *edge);
 					}
 				}
-
-
 			}
 			// barrier
 			if( barrier != std::numeric_limits<float>::max())

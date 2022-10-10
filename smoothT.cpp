@@ -313,7 +313,7 @@ int main(  int ARGC, char ** ARGV)
 		generations;
 
 
-//	std::cout << "unshifted energies, first node: " << first_node->GetEnergy() << " last node: " << last_node->GetEnergy() << std::endl;
+	std::cout << "unshifted energies, first node: " << first_node->GetEnergy() << " last node: " << last_node->GetEnergy() << std::endl;
 //	std::cout << "unshifted barriers, first node: " << first_node->GetBarrier() << " last node: " << last_node->GetBarrier() << std::endl;
 //	std::cout << "unshifted integrals, first node: " << first_node->GetSum() << " last node: " << last_node->GetSum() << std::endl;
 
@@ -323,7 +323,7 @@ int main(  int ARGC, char ** ARGV)
 	}
 	Shift( first_node, zero_energy);
 
-//	std::cout << "shifted energies, first node: " << first_node->GetEnergy() << " last node: " << last_node->GetEnergy() << std::endl;
+	std::cout << "shifted energies, first node: " << first_node->GetEnergy() << " last node: " << last_node->GetEnergy() << std::endl;
 //	std::cout << "shifted barriers, first node: " << first_node->GetBarrier() << " last node: " << last_node->GetBarrier() << std::endl;
 //	std::cout << "shifted integrals, first node: " << first_node->GetSum() << " last node: " << last_node->GetSum() << std::endl;
 	////////////////////////////////////////////////////////
@@ -373,6 +373,13 @@ int main(  int ARGC, char ** ARGV)
 
 	std::cout << "path length: " << final_path.size() << std::endl;
 
+	std::reverse( final_path.begin(), final_path.end());
+
+//	for( auto a : final_path)
+//	{
+//		Shift( a, -zero_energy);  //  TODO: shift sum, barrier in nodes??
+//	}
+
 	if( final_path[0] == first_node)
 	{
 		std::cout << "first node found in final path" << std::endl;
@@ -384,8 +391,8 @@ int main(  int ARGC, char ** ARGV)
 
 	std::cout << "Best path: barrier: " << last_node->GetBarrier() << " integral: " << last_node->GetSum() << std::endl;
 
-	Write( final_path, 0.0, last_node->GetBarrier(), outdir);
-//	Write( final_path, zero_energy, last_node->GetBarrier() + zero_energy, outdir); // UNCOMMENT THIS AFTER TEST ROUND !!!!
+//	Write( final_path, 0.0, last_node->GetBarrier(), outdir);
+	Write( final_path, zero_energy, last_node->GetBarrier() + zero_energy, outdir); // UNCOMMENT THIS AFTER TEST ROUND !!!!
 	now = clock();
 	std::cout << "TIMER: writing: " << float( now - now2) / CLOCKS_PER_SEC << std::endl;
 
