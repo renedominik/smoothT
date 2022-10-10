@@ -375,9 +375,12 @@ int main(  int ARGC, char ** ARGV)
 
 	std::reverse( final_path.begin(), final_path.end());
 
+	std::vector< float>
+		final_energies;
 	for( auto a : final_path)
 	{
 		Shift( a, -zero_energy);  //  TODO: shift sum, barrier in nodes??
+		final_energies.push_back( a->GetEnergy() );
 	}
 
 	if( final_path[0] == first_node)
@@ -392,7 +395,8 @@ int main(  int ARGC, char ** ARGV)
 	std::cout << "Best path: barrier: " << last_node->GetBarrier() << " integral: " << last_node->GetSum() << std::endl;
 
 //	Write( final_path, 0.0, last_node->GetBarrier(), outdir);
-	Write( final_path, zero_energy, last_node->GetBarrier() + zero_energy, outdir); // UNCOMMENT THIS AFTER TEST ROUND !!!!
+//	Write( final_path, zero_energy, last_node->GetBarrier() + zero_energy, outdir); // UNCOMMENT THIS AFTER TEST ROUND !!!!
+	Write( final_path, *std::min_element( final_energies.begin(), final_energies.end()), *std::max_element( final_energies.begin(), final_energies.end() ), outdir); // UNCOMMENT THIS AFTER TEST ROUND !!!!
 	now = clock();
 	std::cout << "TIMER: writing: " << float( now - now2) / CLOCKS_PER_SEC << std::endl;
 
