@@ -90,8 +90,10 @@ std::string &
 WriteBFactor( std::string &LINE, float X)
 {
   std::stringstream stream;
-  stream << std::fixed << std::setprecision(2) << std::setw(6) << std::right << X;
-  LINE = LINE.substr(0,60) + stream.str() + LINE.substr( 66, LINE.size() - 66 );
+  stream << std::scientific << std::setprecision(2) << std::setw(6) << std::right << X;
+  std::string s = stream.str();
+  if( s.size() > 6){ s = s.substr(0,6);} // NOTE: truncated, not rounded !!
+  LINE = LINE.substr(0,60) + s + LINE.substr( 66, LINE.size() - 66 );
   return LINE;
 }
 
