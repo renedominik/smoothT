@@ -439,7 +439,10 @@ void Write
 		out1 << rmsd << "\t" << PATH[i]->GetEnergy() << std::endl;
 		out2 << "MODEL " << i + 1 << std::endl;
 		out2 << "HEADER" << std::endl;
-		out2 << PATH[i]->GetName() << "\t" << PATH[i]->GetEnergy() << std::endl;
+		std::vector<std::string> v;
+		Split( PATH[i]->GetName() , v ); // weird
+		std::string str = v.back();
+		out2 << str << "\t" << PATH[i]->GetEnergy() << std::endl;
 		WritePDB( out2, PATH[i]->GetName(), MIN, PATH[i]->GetEnergy(), MAX );
 		out2 << "ENDMDL" << std::endl;
 		if( i < PATH.size() - 1){
