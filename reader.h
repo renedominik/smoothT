@@ -5,7 +5,8 @@
  *   pdb and alignments
  *
  *  Created on: Oct 7, 2019
- *      Author,Copyright: Rene Staritzbichler
+ *      Author: Rene Staritzbichler
+ *  License: CC BY 4.0
  */
 
 #ifndef READER_H_

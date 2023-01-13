@@ -29,3 +29,9 @@ ADVANCED FEATURES:
 
 TODOs: 
 - switch energies/barriers/sums of first & last node off? (same for all paths)
+
+
+LICENCSE:
+
+SmoothT by Rene Staritzbichler and Nikola Ristic is available under creative commons license (CC BY 4.0).
+

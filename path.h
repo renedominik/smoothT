@@ -3,6 +3,7 @@
  *
  *  Created on: Oct 7, 2019
  *      Author: Rene Staritzbichler
+ *  CC BY 4.0
  */
 
 #ifndef PATH_H_
