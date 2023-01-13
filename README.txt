@@ -33,5 +33,5 @@ TODOs:
 
 LICENCSE:
 
-SmoothT by Rene Staritzbichler and Nikola Ristic is available under creative commons license (CC BY 4.0).
+SmoothT by Rene Staritzbichler and Nikola Ristic is available under creative commons license CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
 
